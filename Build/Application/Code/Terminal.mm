@@ -1200,7 +1200,7 @@ public:
 	Boolean								bellDisabled;				//!< if true, all bell signals are completely ignored (no audio or visual)
 	Terminal_CursorType					cursorType;					//!< cursor shape (from viewpoint of program running in terminal)
 	Boolean								cursorBlinking;				//!< if true, cursor is set to blink (from viewpoint of program running in terminal)
-	Boolean								cursorVisible;				//!< if true, cursor state is visible (as opposed to invisible)
+	Boolean								cursorVisible;				//!< if true, cursor state is visible (as opposed to invisible); see also DECTCEM
 	Boolean								reverseVideo;				//!< if true, foreground and background colors are swapped when rendering
 	Boolean								windowMinimized;			//!< if true, the window has been *flagged* as being iconified; since this is only
 																	//!  a data model, this only means that a terminal sequence has told the window to
@@ -9242,9 +9242,12 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 							{
 								Console_WriteLine("request to prohibit Sixel scrolling");
 							}
+							outHandled = true;
 							break;
 						
+						case kMy_ParamUndefined:
 						default:
+							// (pass to parent emulator)
 							break;
 						}
 					}
@@ -10318,6 +10321,9 @@ modeSetReset	(My_ScreenBufferPtr		inDataPtr,
 			{
 				switch (inDataPtr->emulator.argList[i])
 				{
+				case 0: // error, ignored
+					break;
+				
 				case 1:
 					// DECCKM (cursor-key mode)
 					inDataPtr->modeCursorKeysForApp = inIsModeEnabled;
@@ -10351,6 +10357,9 @@ modeSetReset	(My_ScreenBufferPtr		inDataPtr,
 						// home the cursor
 						moveCursor(inDataPtr, 0, 0);
 					}
+					break;
+				
+				case 4: // DECSCLM (if enabled, scrolling is smooth at 6 lines per second; otherwise, instantaneous)
 					break;
 				
 				case 5:
@@ -10393,13 +10402,29 @@ modeSetReset	(My_ScreenBufferPtr		inDataPtr,
 					if (false == inIsModeEnabled) inDataPtr->wrapPending = false;
 					break;
 				
-				case 4: // DECSCLM (if enabled, scrolling is smooth at 6 lines per second; otherwise, instantaneous)
 				case 8: // DECARM (auto-repeating)
+					break;
+				
 				case 9: // DECINLM (interlace)
-				case 0: // error, ignored
+					break;
+				
+				case 38: // DECTEK (graphics mode)
+					if (inIsModeEnabled)
+					{
+						Console_WriteLine("request to enable TEK graphics mode");
+					}
+					else
+					{
+						Console_WriteLine("request to disable TEK graphics mode");
+					}
+					break;
+				
 				case kMy_ParamUndefined: // no value given (set and reset do not have default values)
+					break;
+				
 				default:
 					// ???
+					Console_Warning(Console_WriteValue, "ignoring unsupported private mode", inDataPtr->emulator.argList[i]);
 					break;
 				}
 				
@@ -10412,8 +10437,16 @@ modeSetReset	(My_ScreenBufferPtr		inDataPtr,
 		}
 		break;
 	
+	case 2: // AM (keyboard action mode)
+		Console_Warning(Console_WriteLine, "ignoring unsupported mode (AM)");
+		break;
+	
 	case 4: // insert/replace character writing mode
 		inDataPtr->modeInsertNotReplace = inIsModeEnabled;
+		break;
+	
+	case 12: // SRM (send/receive mode)
+		Console_Warning(Console_WriteLine, "ignoring unsupported mode (SRM)");
 		break;
 	
 	case 20: // LNM (line feed / newline mode)
@@ -10422,6 +10455,7 @@ modeSetReset	(My_ScreenBufferPtr		inDataPtr,
 		break;
 	
 	default:
+		Console_Warning(Console_WriteValue, "ignoring unsupported mode", inDataPtr->emulator.argList[0]);
 		break;
 	}
 }// My_VT100::modeSetReset
@@ -13740,6 +13774,56 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		}
 		break;
 	
+	case My_VT100::kStateRM:
+	case My_VT100::kStateSM:
+		{
+			Boolean const	kParameterIsSet = (My_VT100::kStateSM == inOldNew.second);
+			
+			
+			// defer some of the set/reset handler to the base emulator
+			// but check for VT220-specific parameters here
+			outHandled = false;
+			
+			switch (inDataPtr->emulator.argList[0])
+			{
+			case kMy_ParamPrivate: // DEC-private control sequence
+				{
+					SInt16		i = 0;
+					
+					
+					for (i = 1/* skip the meta-parameter */; i <= inDataPtr->emulator.argLastIndex; ++i)
+					{
+						switch (inDataPtr->emulator.argList[i])
+						{
+						case 25:
+							// cursor visibility (DECTCEM)
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to show cursor");
+							}
+							else
+							{
+								Console_WriteLine("request to hide cursor");
+							}
+							outHandled = true;
+							break;
+						
+						case kMy_ParamUndefined:
+						default:
+							// (pass to parent emulator)
+							break;
+						}
+					}
+				}
+				break;
+			
+			default:
+				// 
+				break;
+			}
+		}
+		break;
+	
 	case kStateCSISecondaryDA:
 		// flag to mark the control sequence as secondary device attributes
 		inDataPtr->emulator.argList[inDataPtr->emulator.argLastIndex] = kMy_ParamSecondaryDA;
@@ -14732,6 +14816,790 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 			else
 			{
 				// ??? - do nothing
+			}
+		}
+		break;
+	
+	case My_VT100::kStateRM:
+	case My_VT100::kStateSM:
+		{
+			Boolean const	kParameterIsSet = (My_VT100::kStateSM == inOldNew.second);
+			
+			
+			// defer some of the set/reset handler to the base emulator
+			// but check for XTerm-specific parameters here
+			outHandled = false;
+			
+			switch (inDataPtr->emulator.argList[0])
+			{
+			case kMy_ParamPrivate: // DEC-private control sequence
+				{
+					SInt16		i = 0;
+					
+					
+					for (i = 1/* skip the meta-parameter */; i <= inDataPtr->emulator.argLastIndex; ++i)
+					{
+						switch (inDataPtr->emulator.argList[i])
+						{
+						case 9:
+							// send mouse X/Y on button press; in XTerm, this overrides DECINLM (interlace)
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to send mouse X/Y on press");
+							}
+							else
+							{
+								Console_WriteLine("request to prohibit mouse X/Y on press");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 10:
+							// toolbar visibility (rxvt feature)
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to show toolbar");
+							}
+							else
+							{
+								Console_WriteLine("request to hide toolbar");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 12:
+						case 13:
+							// blinking cursor
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to start blinking cursor");
+							}
+							else
+							{
+								Console_WriteLine("request to stop blinking cursor");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 14:
+							// enable XOR of blinking cursor and UI (not used)
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 18:
+							// print form feed (DECPFF in VT5xx)
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to start printing form feeds");
+							}
+							else
+							{
+								Console_WriteLine("request to stop printing form feeds");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 19:
+							// print extent full screen (DECPEX in VT5xx)
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to set print extent to full screen");
+							}
+							else
+							{
+								Console_WriteLine("request to not set print extent to full screen");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						//case 25:
+						//	(cursor visibility; handled by VT220)
+						//	break;
+						
+						case 30:
+							// scroll bar visibility (rxvt feature)
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to show scroll bar");
+							}
+							else
+							{
+								Console_WriteLine("request to hide scroll bar");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 35:
+							// font shifting (rxvt feature)
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to enable font-shifting");
+							}
+							else
+							{
+								Console_WriteLine("request to disable font-shifting");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						//case 38:
+						//	(TEK mode; handled by VT100)
+						//	break;
+						
+						case 40:
+							// allow 80-to-132
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to allow 80-to-132");
+							}
+							else
+							{
+								Console_WriteLine("request to prohibit 80-to-132");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 41:
+							// XTerm fix for "more" command
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to enable fix for 'more'");
+							}
+							else
+							{
+								Console_WriteLine("request to disable fix for 'more'");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 42:
+							// enable nation replacement character sets (DECNRCM in VT5xx)
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to enable nation replacement character sets");
+							}
+							else
+							{
+								Console_WriteLine("request to disable nation replacement character sets");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 43:
+							// graphics expanded print mode (DECGEPM)
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to enable graphics expanded print mode");
+							}
+							else
+							{
+								Console_WriteLine("request to disable graphics expanded print mode");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 44:
+							// margin bell
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to enable margin bell");
+							}
+							else
+							{
+								Console_WriteLine("request to disable margin bell");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 45:
+							// control of reverse wrap-around mode (works by default)
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to enable reverse wrap-around mode");
+							}
+							else
+							{
+								Console_WriteLine("request to disable reverse wrap-around mode");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 46:
+							// logging control
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to start logging");
+							}
+							else
+							{
+								Console_WriteLine("request to stop logging");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 47:
+							// alternate screen buffer (see 1047) or graphics rotated print mode (DECGRPM)
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to use alternate screen buffer");
+							}
+							else
+							{
+								Console_WriteLine("request to use normal screen buffer");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 66:
+							// application keypad (DECNKM in VT5xx)
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to start using application keypad");
+							}
+							else
+							{
+								Console_WriteLine("request to stop using application keypad");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 67:
+							// map back arrow to backspace (DECBKM in VT3xx)
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to start mapping back-arrow to backspace");
+							}
+							else
+							{
+								Console_WriteLine("request to stop mapping back-arrow to backspace");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						//case 80:
+						//	(SIXEL scrolling mode; handled by SixelCore)
+						//	break;
+						
+						case 95:
+							// do not clear screen when using DECCOLM (DECNCSM in VT5xx)
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to enable no-screen-clear for DECCOLM");
+							}
+							else
+							{
+								Console_WriteLine("request to disable no-screen-clear for DECCOLM");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 1000:
+							// send mouse X/Y on button press and release (MTM)
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to send mouse X/Y on press and release");
+							}
+							else
+							{
+								Console_WriteLine("request to prohibit mouse X/Y on press and release");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 1001:
+							// use highlight mouse tracking (HMTM)
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to enable highlight mouse tracking");
+							}
+							else
+							{
+								Console_WriteLine("request to disable highlight mouse tracking");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 1002:
+							// use cell motion mouse tracking (BMMTM)
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to enable cell motion mouse tracking");
+							}
+							else
+							{
+								Console_WriteLine("request to disable cell motion mouse tracking");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 1003:
+							// use all motion mouse tracking
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to enable all motion mouse tracking");
+							}
+							else
+							{
+								Console_WriteLine("request to disable all motion mouse tracking");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 1004:
+							// use window focus tracking (WFTM)
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to enable window focus tracking");
+							}
+							else
+							{
+								Console_WriteLine("request to disable window focus tracking");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 1005:
+							// UTF-8 mouse mode
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to enable UTF-8 mouse mode (1005); 1006 should be used");
+							}
+							else
+							{
+								Console_WriteLine("request to disable UTF-8 mouse mode (1005); 1006 should be used");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 1006:
+							// use decimal mouse tracking (DMTM)
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to enable decimal mouse tracking");
+							}
+							else
+							{
+								Console_WriteLine("request to disable decimal mouse tracking");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 1007:
+							// alternate scroll
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to enable alternate scroll");
+							}
+							else
+							{
+								Console_WriteLine("request to disable alternate scroll");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 1010:
+							// scroll to bottom on TTY output (rxvt feature)
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to enable scroll-to-bottom on TTY output");
+							}
+							else
+							{
+								Console_WriteLine("request to disable scroll-to-bottom on TTY output");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 1011:
+							// scroll to bottom on key press (rxvt feature)
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to enable scroll-to-bottom on key press");
+							}
+							else
+							{
+								Console_WriteLine("request to disable scroll-to-bottom on key press");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 1015:
+							// broken decimal urxvt mouse (cannot implement cleanly; ignore)
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to enable broken urxvt mouse (1015); 1006 should be used");
+							}
+							else
+							{
+								Console_WriteLine("request to disable broken urxvt mouse (1015); 1006 should be used");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 1016:
+							// SGR pixel-position mouse
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to enable pixel-position mouse");
+							}
+							else
+							{
+								Console_WriteLine("request to disable pixel-position mouse");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 1034:
+							// interpret Meta key, eighth bit input
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to enable interpretation of Meta key");
+							}
+							else
+							{
+								Console_WriteLine("request to disable interpretation of Meta key");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 1035:
+							// special modifiers for Alt and NumLock keys
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to enable special modifiers for “alt” and “num lock”");
+							}
+							else
+							{
+								Console_WriteLine("request to disable special modifiers for “alt” and “num lock”");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 1036:
+							// send escape when Meta modifies a key
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to enable sending of escape when Meta modifies a key");
+							}
+							else
+							{
+								Console_WriteLine("request to disable sending of escape when Meta modifies a key");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 1037:
+							// send DEL from editing-keypad delete key
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to enable sending of DEL from editing-keypad delete key");
+							}
+							else
+							{
+								Console_WriteLine("request to disable sending of DEL from editing-keypad delete key");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 1039:
+							// send escape when Alt modifies a key
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to enable sending of escape when “alt” modifies a key");
+							}
+							else
+							{
+								Console_WriteLine("request to disable sending of escape when “alt” modifies a key");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 1040:
+							// keep selection even if not highlighted
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to enable keeping of selection even if not highlighted");
+							}
+							else
+							{
+								Console_WriteLine("request to disable keeping of selection even if not highlighted");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 1041:
+							// select to Clipboard
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to enable select to Clipboard");
+							}
+							else
+							{
+								Console_WriteLine("request to disable select to Clipboard");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 1042:
+							// enable “urgent” bell
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to enable “urgent” bell");
+							}
+							else
+							{
+								Console_WriteLine("request to disable “urgent” bell");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 1043:
+							// enable raising of window on bell
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to enable raising of window on bell");
+							}
+							else
+							{
+								Console_WriteLine("request to disable raising of window on bell");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 1044:
+							// enable Clipboard reuse
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to enable Clipboard reuse");
+							}
+							else
+							{
+								Console_WriteLine("request to disable Clipboard reuse");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 1046:
+							// enable switching to/from alternate screen buffer
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to enable switching to/from alternate screen buffer");
+							}
+							else
+							{
+								Console_WriteLine("request to disable switching to/from alternate screen buffer");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 1047:
+							// alternate screen buffer (see 47)
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to use alternate screen buffer (1047)");
+							}
+							else
+							{
+								Console_WriteLine("request to use normal screen buffer (1047)");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 1048:
+							// save cursor as in DECSC
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to save cursor (via XTerm)");
+								cursorSave(inDataPtr);
+							}
+							else
+							{
+								Console_WriteLine("request to not save cursor (via XTerm)");
+								cursorRestore(inDataPtr);
+							}
+							outHandled = true;
+							break;
+						
+						case 1049:
+							// save cursor as in DECSC and use alternate screen buffer, clearing it
+							// (should be same as 1047 and 1048 above)
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to save cursor and use alternate screen buffer");
+								cursorSave(inDataPtr);
+								// INCOMPLETE; alternate screen buffer is not implemented
+							}
+							else
+							{
+								Console_WriteLine("request to not save cursor and use alternate screen buffer");
+								cursorRestore(inDataPtr);
+								// INCOMPLETE; alternate screen buffer is not implemented
+							}
+							outHandled = true;
+							break;
+						
+						case 1050:
+							// set terminfo/termcap function-key mode
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to set terminfo/termcap function-key mode");
+							}
+							else
+							{
+								Console_WriteLine("request to reset terminfo/termcap function-key mode");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 1051:
+							// Sun function-key mode
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to set Sun function-key mode");
+							}
+							else
+							{
+								Console_WriteLine("request to reset Sun function-key mode");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 1052:
+							// HP function-key mode
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to set HP function-key mode");
+							}
+							else
+							{
+								Console_WriteLine("request to reset HP function-key mode");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 1053:
+							// SCO function-key mode
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to set SCO function-key mode");
+							}
+							else
+							{
+								Console_WriteLine("request to reset SCO function-key mode");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 1060:
+							// legacy keyboard emulation (X11R6)
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to set legacy keyboard emulation (X11R6)");
+							}
+							else
+							{
+								Console_WriteLine("request to reset legacy keyboard emulation (X11R6)");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 1061:
+							// Sun/PC keyboard emulation of VT220
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to set Sun/PC keyboard emulation of VT220");
+							}
+							else
+							{
+								Console_WriteLine("request to reset Sun/PC keyboard emulation of VT220");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 2004:
+							// bracketed Paste mode
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to set bracketed Paste mode");
+							}
+							else
+							{
+								Console_WriteLine("request to reset bracketed Paste mode");
+							}
+							// UNIMPLEMENTED
+							outHandled = true;
+							break;
+						
+						case 0:
+						case 1:
+						case 2:
+						case 3:
+						case 4:
+						case 5:
+						case 6:
+						case 7:
+						case 8:
+						case kMy_ParamUndefined:
+						default:
+							// (pass to parent emulator)
+							break;
+						}
+					}
+				}
+				break;
+			
+			default:
+				// 
+				break;
 			}
 		}
 		break;
@@ -18107,6 +18975,9 @@ Changes the logical cursor state.  Performed in a
 function for consistency in case, for instance,
 callbacks are invoked in the future whenever this
 flag changes.
+
+See also DECTCEM mode, which overrides this when
+communicating with renderers.
 
 (3.0)
 */
