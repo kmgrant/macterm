@@ -47,7 +47,7 @@
 
 // Mac includes
 #import <Carbon/Carbon.h> // for kVK... virtual key codes (TEMPORARY; deprecated)
-#import <CoreServices/CoreServices.h>
+@import CoreServices;
 
 // library includes
 #import <CFRetainRelease.h>

@@ -34,7 +34,7 @@
 #import <cctype>
 
 // Mac includes
-#import <Cocoa/Cocoa.h>
+@import Cocoa;
 
 // library includes
 #import <CFRetainRelease.h>

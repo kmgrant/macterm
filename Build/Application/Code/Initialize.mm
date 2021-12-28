@@ -45,9 +45,9 @@
 #import <string>
 
 // Mac includes
-#import <ApplicationServices/ApplicationServices.h>
-#import <CoreFoundation/CoreFoundation.h>
-#import <CoreServices/CoreServices.h>
+@import ApplicationServices;
+@import CoreFoundation;
+@import CoreServices;
 
 // library includes
 #import <AlertMessages.h>

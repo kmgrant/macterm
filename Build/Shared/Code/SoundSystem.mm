@@ -30,7 +30,7 @@
 #import <UniversalDefines.h>
 
 // Mac includes
-#import <AppKit/AppKit.h>
+@import AppKit;
 
 
 

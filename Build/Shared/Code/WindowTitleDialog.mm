@@ -38,8 +38,8 @@
 #import <climits>
 
 // Mac includes
-#import <Cocoa/Cocoa.h>
 #import <objc/objc-runtime.h>
+@import Cocoa;
 
 // library includes
 #import <CocoaBasic.h>

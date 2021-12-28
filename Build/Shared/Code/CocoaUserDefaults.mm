@@ -29,8 +29,8 @@
 #import <CocoaUserDefaults.h>
 
 // Mac includes
-#import <CoreFoundation/CoreFoundation.h>
-#import <Cocoa/Cocoa.h>
+@import CoreFoundation;
+@import Cocoa;
 
 // library includes
 #import <CFRetainRelease.h>

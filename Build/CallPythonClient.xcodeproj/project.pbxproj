@@ -301,7 +301,11 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				OBJROOT = _Generated;
-				OTHER_CFLAGS = "-IShared/Code";
+				OTHER_CFLAGS = (
+					"-IShared/Code",
+					"-fmodules",
+					"-fcxx-modules",
+				);
 				SYMROOT = _Generated;
 				WARNING_CFLAGS = (
 					"-Wall",
@@ -344,7 +348,11 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				OBJROOT = _Generated;
-				OTHER_CFLAGS = "-IShared/Code";
+				OTHER_CFLAGS = (
+					"-IShared/Code",
+					"-fmodules",
+					"-fcxx-modules",
+				);
 				SYMROOT = _Generated;
 			};
 			name = ForRelease;

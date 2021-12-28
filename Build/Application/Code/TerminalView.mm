@@ -45,10 +45,11 @@
 #import <vector>
 
 // Mac includes
-#import <ApplicationServices/ApplicationServices.h>
 #import <Carbon/Carbon.h> // TEMPORARY; some legacy types used below (like EventTime)
-#import <Cocoa/Cocoa.h>
 #import <CoreImage/CIFilterBuiltins.h>
+@import ApplicationServices;
+@import Cocoa;
+@import CoreServices;
 
 // library includes
 #import <AlertMessages.h>

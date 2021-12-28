@@ -34,9 +34,9 @@
 #import <UniversalDefines.h>
 
 // Mac includes
-#import <Cocoa/Cocoa.h>
-#import <CoreServices/CoreServices.h>
-#import <QuartzCore/QuartzCore.h>
+@import Cocoa;
+@import CoreServices;
+@import QuartzCore;
 
 // library includes
 #import <CFRetainRelease.h>

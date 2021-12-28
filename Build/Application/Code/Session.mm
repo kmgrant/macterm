@@ -52,9 +52,9 @@
 #import <strings.h>
 
 // Mac includes
-#import <ApplicationServices/ApplicationServices.h>
 #import <Carbon/Carbon.h> // for kVK... virtual key codes (TEMPORARY; deprecated)
-#import <CoreServices/CoreServices.h>
+@import ApplicationServices;
+@import CoreServices;
 
 // library includes
 #import <AlertMessages.h>
@@ -4691,7 +4691,6 @@ Session_UserInputPaste	(SessionRef		inRef,
 											
 											
 											UNUSED_RETURN(SInt16)Session_SendData(inRef, bracket, length);
-											NSLog(@"send bracket >");
 										}
 										else
 										{
@@ -4700,7 +4699,6 @@ Session_UserInputPaste	(SessionRef		inRef,
 											
 											
 											UNUSED_RETURN(SInt16)Session_SendData(inRef, bracket, length);
-											NSLog(@"send bracket <");
 										}
 									};
 			auto					joinResponder =

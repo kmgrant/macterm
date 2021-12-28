@@ -31,7 +31,7 @@
 ###############################################################*/
 
 // Mac includes
-#import <Cocoa/Cocoa.h>
+@import Cocoa;
 
 // library includes
 @class CocoaExtensions_ObserverSpec;

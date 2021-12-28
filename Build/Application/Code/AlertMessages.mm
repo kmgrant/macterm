@@ -33,9 +33,9 @@
 #import <UniversalDefines.h>
 
 // Mac includes
-#import <ApplicationServices/ApplicationServices.h>
-#import <CoreServices/CoreServices.h>
 #import <objc/objc-runtime.h>
+@import ApplicationServices;
+@import CoreServices;
 
 // library includes
 #import <CFRetainRelease.h>

@@ -48,8 +48,8 @@
 #import <utility>
 
 // Mac includes
-#import <Cocoa/Cocoa.h>
-#import <CoreServices/CoreServices.h>
+@import Cocoa;
+@import CoreServices;
 
 // library includes
 #import <AlertMessages.h>

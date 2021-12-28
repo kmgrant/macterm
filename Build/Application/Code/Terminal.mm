@@ -34,7 +34,6 @@
 #import <UniversalDefines.h>
 
 // standard-C includes
-#import <algorithm>
 #import <cctype>
 #import <cstdio>
 #import <cstdlib>
@@ -60,8 +59,8 @@ extern "C"
 }
 
 // Mac includes
-#import <ApplicationServices/ApplicationServices.h>
-#import <CoreServices/CoreServices.h>
+@import ApplicationServices;
+@import CoreServices;
 
 // library includes
 #import <AlertMessages.h>

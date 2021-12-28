@@ -41,7 +41,7 @@
 #import <set>
 
 // Mac includes
-#import <Cocoa/Cocoa.h>
+@import Cocoa;
 
 // library includes
 #import <CocoaExtensions.objc++.h>

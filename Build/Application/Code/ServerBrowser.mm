@@ -34,8 +34,8 @@
 #import "ServerBrowser.h"
 
 // Mac includes
-#import <Cocoa/Cocoa.h>
 #import <objc/objc-runtime.h>
+@import Cocoa;
 
 // Unix includes
 extern "C"

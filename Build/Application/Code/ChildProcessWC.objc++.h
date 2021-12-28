@@ -36,7 +36,7 @@
 #pragma once
 
 // Mac includes
-#import <Cocoa/Cocoa.h>
+@import Cocoa;
 
 
 

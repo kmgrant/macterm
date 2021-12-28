@@ -55,8 +55,8 @@ extern "C"
 
 // Mac includes
 #import <Carbon/Carbon.h> // for old APIs (TEMPORARY; deprecated)
-#import <Cocoa/Cocoa.h>
-#import <CoreServices/CoreServices.h>
+@import Cocoa;
+@import CoreServices;
 
 // library includes
 #import <AlertMessages.h>

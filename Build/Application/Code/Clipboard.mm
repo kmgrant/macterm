@@ -40,10 +40,9 @@
 #import <sys/param.h>
 
 // Mac includes
-#import <ApplicationServices/ApplicationServices.h>
-#import <CoreServices/CoreServices.h>
 #import <objc/objc-runtime.h>
-//CARBON//#import <QuickTime/QuickTime.h>
+@import ApplicationServices;
+@import CoreServices;
 
 // library includes
 #import <CFRetainRelease.h>

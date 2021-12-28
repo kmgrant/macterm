@@ -31,8 +31,8 @@
 ###############################################################*/
 
 // Mac includes
-#import <Cocoa/Cocoa.h>
-#import <ApplicationServices/ApplicationServices.h>
+@import ApplicationServices;
+@import Cocoa;
 
 // application includes
 #import "TerminalViewRef.typedef.h"

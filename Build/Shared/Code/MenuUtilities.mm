@@ -34,7 +34,7 @@
 #import <UniversalDefines.h>
 
 // Mac includes
-#import <Cocoa/Cocoa.h>
+@import Cocoa;
 
 
 

@@ -36,7 +36,7 @@
 #import <string>
 
 // Mac includes
-#import <CoreServices/CoreServices.h>
+@import CoreServices;
 
 // library includes
 #import <CFRetainRelease.h>

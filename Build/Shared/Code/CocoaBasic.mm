@@ -32,9 +32,9 @@
 #import <map>
 
 // Mac includes
-#import <Cocoa/Cocoa.h>
 #import <objc/objc-runtime.h>
-#import <UserNotifications/UserNotifications.h>
+@import Cocoa;
+@import UserNotifications;
 
 // library includes
 #import <CFRetainRelease.h>

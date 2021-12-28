@@ -44,7 +44,7 @@
 
 // Mac includes
 #import <Carbon/Carbon.h> // for kVK... virtual key codes (TEMPORARY; deprecated)
-#import <Cocoa/Cocoa.h>
+@import Cocoa;
 
 // library includes
 #import <AlertMessages.h>

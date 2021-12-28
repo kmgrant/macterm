@@ -21,7 +21,7 @@
 ###############################################################*/
 
 // Mac includes
-#import <Cocoa/Cocoa.h>
+@import Cocoa;
 
 // library includes
 #import <CocoaAnimation.h>

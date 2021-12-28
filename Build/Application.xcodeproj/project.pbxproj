@@ -1503,6 +1503,8 @@
 					"-IApplication/Resources",
 					"-IApplication/Resources/Base.lproj",
 					"$(SDK_PATCH_INCLUDES)",
+					"-fmodules",
+					"-fcxx-modules",
 				);
 				SDKROOT = macosx;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -1688,6 +1690,8 @@
 					"-IApplication/Resources",
 					"-IApplication/Resources/Base.lproj",
 					"$(SDK_PATCH_INCLUDES)",
+					"-fmodules",
+					"-fcxx-modules",
 				);
 				SDKROOT = macosx;
 				SWIFT_INCLUDE_PATHS = "$(BUILT_PRODUCTS_DIR)";

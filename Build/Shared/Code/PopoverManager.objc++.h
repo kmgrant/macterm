@@ -51,7 +51,7 @@
 #pragma once
 
 // Mac includes
-#import <Cocoa/Cocoa.h>
+@import Cocoa;
 
 // library includes
 #import <Popover.objc++.h>

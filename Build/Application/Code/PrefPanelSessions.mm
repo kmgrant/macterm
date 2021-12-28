@@ -45,8 +45,8 @@ extern "C"
 #import <strings.h>
 
 // Mac includes
-#import <CoreServices/CoreServices.h>
 #import <objc/objc-runtime.h>
+@import CoreServices;
 
 // library includes
 #import <CFRetainRelease.h>

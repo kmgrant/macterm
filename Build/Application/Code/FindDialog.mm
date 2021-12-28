@@ -41,8 +41,8 @@
 #import <vector>
 
 // Mac includes
-#import <Cocoa/Cocoa.h>
 #import <objc/objc-runtime.h>
+@import Cocoa;
 
 // library includes
 #import <AlertMessages.h>

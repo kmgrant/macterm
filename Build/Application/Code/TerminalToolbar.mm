@@ -34,8 +34,8 @@
 #import <UniversalDefines.h>
 
 // Mac includes
-#import <Cocoa/Cocoa.h>
-#import <CoreServices/CoreServices.h>
+@import Cocoa;
+@import CoreServices;
 
 // library includes
 #import <CGContextSaveRestore.h>

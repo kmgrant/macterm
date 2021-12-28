@@ -40,9 +40,9 @@
 #import <cstring>
 
 // Mac includes
-#import <Cocoa/Cocoa.h>
-#import <CoreServices/CoreServices.h>
 #import <objc/objc-runtime.h>
+@import Cocoa;
+@import CoreServices;
 
 // library includes
 #import <BoundName.objc++.h>

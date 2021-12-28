@@ -34,7 +34,7 @@
 #import <UniversalDefines.h>
 
 // Mac includes
-#import <CoreServices/CoreServices.h>
+@import CoreServices;
 
 
 

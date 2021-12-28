@@ -50,9 +50,9 @@ extern "C"
 }
 
 // Mac includes
-#import <ApplicationServices/ApplicationServices.h>
-#import <Cocoa/Cocoa.h>
-#import <CoreServices/CoreServices.h>
+@import ApplicationServices;
+@import Cocoa;
+@import CoreServices;
 
 // library includes
 #import <AlertMessages.h>

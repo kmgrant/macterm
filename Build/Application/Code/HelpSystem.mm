@@ -36,8 +36,8 @@
 #import <UniversalDefines.h>
 
 // Mac includes
-#import <Cocoa/Cocoa.h>
-#import <CoreServices/CoreServices.h>
+@import Cocoa;
+@import CoreServices;
 
 // application includes
 #import "UIStrings.h"

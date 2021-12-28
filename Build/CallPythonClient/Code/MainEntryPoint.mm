@@ -33,9 +33,9 @@
 #import <iostream>
 
 // Mac includes
-#import <AppKit/AppKit.h>
-#import <Cocoa/Cocoa.h>
-#import <CoreFoundation/CoreFoundation.h>
+@import AppKit;
+@import Cocoa;
+@import CoreFoundation;
 
 // library includes
 #import "XPCCallPythonClient.objc++.h"
