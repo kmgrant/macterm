@@ -155,22 +155,22 @@ public struct UIDebugInterface_View : View {
 			// maximum 10 items per stack; use Group to build more
 			Spacer().asMacTermSectionSpacingV()
 			Group {
-				UICommon_OptionLineView("Global") {
+				UICommon_OptionLineView("Global", noDefaultSpacing: true) {
 					Toggle("Log Terminal State (Except Echo)", isOn: $viewModel.logTerminalState)
 						.fixedSize()
 						.macTermToolTipText("Print high-volume log with detailed terminal emulator input and state transition information, except for characters that will be displayed on the terminal screen.")
 				}
-				UICommon_OptionLineView {
+				UICommon_OptionLineView("", noDefaultSpacing: true) {
 					Toggle("Log Terminal Echo State", isOn: $viewModel.logTerminalEchoState)
 						.fixedSize()
 						.macTermToolTipText("Print high-volume log with information on characters that will be displayed on the terminal screen.")
 				}
-				UICommon_OptionLineView {
+				UICommon_OptionLineView("", noDefaultSpacing: true) {
 					Toggle("Log Terminal Input Characters", isOn: $viewModel.logTerminalInputCharacters)
 						.fixedSize()
 						.macTermToolTipText("Print high-volume log showing every character as it is processed.")
 				}
-				UICommon_OptionLineView {
+				UICommon_OptionLineView("", noDefaultSpacing: true) {
 					Toggle("Log Pseudoterminal Device Settings", isOn: $viewModel.logPseudoTerminalDeviceSettings)
 						.fixedSize()
 						.macTermToolTipText("Print information on low-level terminal device, such as enabled control flags.")
@@ -178,51 +178,47 @@ public struct UIDebugInterface_View : View {
 			}
 			Spacer().asMacTermSectionSpacingV()
 			Group {
-				UICommon_OptionLineView("Sixels") {
+				UICommon_OptionLineView("Sixels", noDefaultSpacing: true) {
 					Toggle("Log Sixel Graphics Decoder Errors", isOn: $viewModel.logSixelGraphicsDecoderErrors)
 						.fixedSize()
 						.macTermToolTipText("Print serious problems (such as being unable to process Sixel data correctly).")
 				}
-				UICommon_OptionLineView {
+				UICommon_OptionLineView("", noDefaultSpacing: true) {
 					Toggle("Log Sixel Graphics Decoder State", isOn: $viewModel.logSixelGraphicsDecoderState)
 						.fixedSize()
 						.macTermToolTipText("Print high-volume log with detailed Sixel decoder input and state transition information.")
 				}
-				UICommon_OptionLineView {
+				UICommon_OptionLineView("", noDefaultSpacing: true) {
 					Toggle("Log Sixel Graphics Summary", isOn: $viewModel.logSixelGraphicsSummary)
 						.fixedSize()
 						.macTermToolTipText("Print overview details when Sixel graphic is created, such as image dimensions and pixel size.")
 				}
 			}
 			Spacer().asMacTermSectionSpacingV()
-			VStack(
-				alignment: .leading
-			) {
-				UICommon_OptionLineView("Active Terminal") {
+			Group {
+				UICommon_OptionLineView("Active Terminal", noDefaultSpacing: true) {
 					Button(action: { viewModel.runner.dumpStateOfActiveTerminal() }) {
 						Text("Log Detailed Snapshot")
 							.frame(minWidth: 160)
 							.macTermToolTipText("Print debugging summary of frontmost terminal window.")
-					}
+					}.padding([.bottom], -6) // not debugging alignment guides; for now, just do this
 				}
 			}
 			Spacer().asMacTermSectionSpacingV()
-			VStack(
-				alignment: .leading
-			) {
-				UICommon_OptionLineView("Incomplete Work") {
+			Group {
+				UICommon_OptionLineView("Incomplete Work", noDefaultSpacing: true) {
 					Button(action: { viewModel.runner.showTestTerminalToolbar() }) {
 						Text("Show Floating Toolbar")
 							.frame(minWidth: 160)
 							.macTermToolTipText("Display window with toolbar items that is shared and updated as terminal windows are activated.")
-					}
+					}.padding([.bottom], -6) // not debugging alignment guides; for now, just do this
 				}
-				UICommon_OptionLineView {
+				UICommon_OptionLineView("", noDefaultSpacing: true) {
 					Button(action: { viewModel.runner.launchNewCallPythonClient() }) {
 						Text("Launch XPC Service")
 							.frame(minWidth: 160)
 							.macTermToolTipText("Spawn XPC Service to experiment with communication between processes.")
-					}
+					}.padding([.bottom], -6) // not debugging alignment guides; for now, just do this
 				}
 			}
 			Spacer().asMacTermSectionSpacingV()
