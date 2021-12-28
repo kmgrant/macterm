@@ -24,6 +24,8 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20211227',
+    '20211222',
     '20210220',
     '20210207',
     '20210123',
@@ -613,6 +615,16 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20211227': [
+        'Implemented "bracketed Paste mode", which is a terminal feature that allows the program running in the terminal to request extra escape sequences before and after text inserted by Paste (or equivalent user-initiated actions such as drag-and-drop).  Many modern versions of shells, text editors and other programs will support this mode.',
+        'The Paste menu command (in both main menu and contextual menus) now displays information on the current state of the protected Paste mode, to give you a better idea what will happen when Paste is used.',
+        'The warning for Multi-Line Paste is now implicitly suppressed while terminals are in "bracketed Paste mode" because that mode indicates the underlying program will handle everything itself (for example, the shell may insert the text and wait for confirmation instead of executing every line).',
+        'Added new low-level preference to disable support for "bracketed Paste mode" (although it is now supported by default).  Note that this new setting is separate from the one that controls Multi-Line Paste warnings.',
+    ],
+    '20211222': [
+        'MacTerm has stopped linking to the system Python 2.x framework because this is no longer allowed by Apple when using the latest OS and SDK.  Unfortunately this will require distributed versions of MacTerm to consume much, much more disk space than before; a solution for this is not yet implemented.  In the meantime, local builds of MacTerm 5 will continue to work if a local Python installation is selected (the default assumes the homebrew installation).',
+        'Python 3.9 is now the default version used by the API and underlying libraries, and code interacting with the framework must support Python 3.x.',
+    ],
     '20210220': [
         'Macros that support substitution now expand "\|" into the number of terminal columns.  (Note, as before, "\#" expands into the number of lines.)',
         'Macros that support substitution now expand "\." into Clipboard text, as if Paste had been used at that point, where each line except the last is followed by the current session’s new-line sequence.  Note that this works even in macros that do not send text so it is actually more flexible than using Paste.',
@@ -620,7 +632,7 @@ notes_by_version = {
         'Contextual menus will now automatically display any named macro with an Action of some "with Substitutions" type if it uses any of the new Clipboard sequences above ("\.", "\:") and there is currently text on the Clipboard.',
     ],
     '20210207': [
-        'Event handlers can now be enabled or disabled with a Notifications toolbar item (bell icon).  For example, you can enable “Notify on Next Activity” this way.',
+        'Event handlers can now be enabled or disabled with a Notifications toolbar item (bell icon).  For example, you can enable "Notify on Next Activity" this way.',
     ],
     '20210123': [
         'Fixed process notification on window resize.',

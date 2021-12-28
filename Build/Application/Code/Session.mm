@@ -4643,6 +4643,9 @@ Session_UserInputPaste	(SessionRef		inRef,
 											: inSourceOrNull;
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	CFArrayRef				pendingLines = nullptr;
+	TerminalWindowRef		terminalWindow = Session_ReturnActiveTerminalWindow(inRef);
+	TerminalScreenRef		screenBuffer = TerminalWindow_ReturnScreenWithFocus(terminalWindow);
+	Boolean					isBracketedPaste = Terminal_PasteIsBracketed(screenBuffer);
 	Session_Result			result = kSession_ResultParameterError;
 	
 	
@@ -4661,16 +4664,45 @@ Session_UserInputPaste	(SessionRef		inRef,
 		isOneLine = (blockPendingLines.count < 2);
 		
 		// determine if the user should be warned
-		unless (kPreferences_ResultOK ==
-				Preferences_GetData(kPreferences_TagNoPasteWarning,
-									sizeof(noWarning), &noWarning))
+		if (isBracketedPaste)
 		{
-			noWarning = false; // assume a value, if preference can’t be found
+			noWarning = true;
+		}
+		else
+		{
+			unless (kPreferences_ResultOK ==
+					Preferences_GetData(kPreferences_TagNoPasteWarning,
+										sizeof(noWarning), &noWarning))
+			{
+				noWarning = false; // assume a value, if preference can’t be found
+			}
 		}
 		
 		// now, paste (perhaps displaying a warning first)
 		{
 			AlertMessages_BoxWrap	box;
+			auto					sendPasteBracket =
+									^(BOOL	inIsOpenBracket)
+									{
+										if (inIsOpenBracket)
+										{
+											char const*		bracket = "\033[200~";
+											size_t const	length = CPP_STD::strlen(bracket);
+											
+											
+											UNUSED_RETURN(SInt16)Session_SendData(inRef, bracket, length);
+											NSLog(@"send bracket >");
+										}
+										else
+										{
+											char const*		bracket = "\033[201~";
+											size_t const	length = CPP_STD::strlen(bracket);
+											
+											
+											UNUSED_RETURN(SInt16)Session_SendData(inRef, bracket, length);
+											NSLog(@"send bracket <");
+										}
+									};
 			auto					joinResponder =
 									^{
 										// first join the text into one line (replace new-line sequences
@@ -4678,16 +4710,25 @@ Session_UserInputPaste	(SessionRef		inRef,
 										NSString*	joinedString = [blockPendingLines componentsJoinedByString:@" "];
 										
 										
+										if (isBracketedPaste)
+										{
+											sendPasteBracket(true/* open */);
+										}
 										Session_UserInputCFString(inRef, BRIDGE_CAST(joinedString, CFStringRef));
+										if (isBracketedPaste)
+										{
+											sendPasteBracket(false/* open */);
+										}
 									};
 			auto					normalPasteResponder =
 									^{
-										CFIndex						lineCount = blockPendingLines.count;
-										CFIndex						dispatchIndex = 0;
-										__block CFIndex				lineIndex = 0;
-										Preferences_Result			prefsResult = kPreferences_ResultOK;
-										Preferences_TimeInterval	delayValue = 0;
-										dispatch_queue_t			targetQueue = dispatch_get_main_queue();
+										CFIndex								lineCount = blockPendingLines.count;
+										CFIndex								dispatchIndex = 0;
+										__block CFIndex						lineIndex = 0;
+										__block Preferences_TimeInterval	pasteDelaySoFar = 0;
+										Preferences_Result					prefsResult = kPreferences_ResultOK;
+										Preferences_TimeInterval			delayValue = 0;
+										dispatch_queue_t					targetQueue = dispatch_get_main_queue();
 										
 										
 										// determine how long the delay between lines should be
@@ -4703,22 +4744,27 @@ Session_UserInputPaste	(SessionRef		inRef,
 										// dispatching each line-send at a multiple of the user-preferred
 										// delay time in the same queue; also, in the event of very large
 										// pastes, force an even greater delay at a longer period
+										if (isBracketedPaste)
+										{
+											dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0),
+															targetQueue,
+															^{
+																sendPasteBracket(true/* open */);
+															});
+										}
 										for (NSString* aString in blockPendingLines)
 										{
-											Preferences_TimeInterval	localDelay = 0;
-											
-											
 											++dispatchIndex;
-											localDelay = (dispatchIndex * STATIC_CAST(delayValue / kPreferences_TimeIntervalNanosecond, int64_t));
+											pasteDelaySoFar = (dispatchIndex * STATIC_CAST(delayValue / kPreferences_TimeIntervalNanosecond, int64_t));
 											// TEMPORARY; create low-level preferences for these additional delay intervals
 											if (0 == (dispatchIndex % 40/* arbitrary */))
 											{
 												// for very large pastes, insert an additional delay after every
 												// so many lines (based on if-statement above), in addition to
 												// any user-prescribed per-line delay
-												localDelay += (10 * kPreferences_TimeIntervalMillisecond); // arbitrary
+												pasteDelaySoFar += (10 * kPreferences_TimeIntervalMillisecond); // arbitrary
 											}
-											dispatch_after(dispatch_time(DISPATCH_TIME_NOW, localDelay),
+											dispatch_after(dispatch_time(DISPATCH_TIME_NOW, pasteDelaySoFar),
 															targetQueue,
 															^{
 																Session_UserInputCFString(inRef, BRIDGE_CAST(aString, CFStringRef));
@@ -4727,6 +4773,14 @@ Session_UserInputPaste	(SessionRef		inRef,
 																{
 																	Session_SendNewline(inRef, kSession_EchoCurrentSessionValue);
 																}
+															});
+										}
+										if (isBracketedPaste)
+										{
+											dispatch_after(dispatch_time(DISPATCH_TIME_NOW, pasteDelaySoFar),
+															targetQueue,
+															^{
+																sendPasteBracket(false/* open */);
 															});
 										}
 									};

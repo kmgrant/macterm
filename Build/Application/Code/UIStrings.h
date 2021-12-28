@@ -232,6 +232,8 @@ enum UIStrings_ContextualMenuCFString
 	kUIStrings_ContextualMenuPrintScreen				= 'PrSc',
 	kUIStrings_ContextualMenuPrintSelectedCanvasRegion	= 'PrSv',
 	kUIStrings_ContextualMenuPrintSelectedText			= 'PrSl',
+	kUIStrings_ContextualMenuPasteBracketedModeOff		= 'PBr0',
+	kUIStrings_ContextualMenuPasteBracketedModeOn		= 'PBr1',
 	kUIStrings_ContextualMenuPasteText					= 'Pste',
 	kUIStrings_ContextualMenuRenameThisWindow			= 'Renm',
 	kUIStrings_ContextualMenuSaveSelectedText			= 'Save',

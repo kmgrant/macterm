@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="17506" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="19529" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="17506"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="19529"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="EventLoop_AppObject">
@@ -266,6 +266,13 @@ DQ
                             <menuItem title="Paste" keyEquivalent="v" id="688">
                                 <connections>
                                     <action selector="paste:" target="-1" id="tzy-QO-5nF"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="&lt;bracketed Paste mode info&gt;" enabled="NO" alternate="YES" indentationLevel="2" id="ujE-dm-5xF">
+                                <attributedString key="attributedTitle"/>
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="performAssessBracketedPasteMode:" target="-1" id="Dv8-zD-NQN"/>
                                 </connections>
                             </menuItem>
                             <menuItem title="Delete" id="690">

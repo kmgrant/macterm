@@ -77,6 +77,8 @@
 	<integer>10</integer>
 	<key>data-send-local-echo-enabled</key>
 	<false/>
+	<key>data-send-paste-allow-bracketed-mode</key>
+	<true/>
 	<key>data-send-paste-line-delay-milliseconds</key>
 	<integer>10</integer>
 	<key>data-send-paste-no-warning</key>

@@ -770,6 +770,16 @@ UIStrings_Copy	(UIStrings_ContextualMenuCFString	inWhichString,
 													CFSTR("kUIStrings_ContextualMenuOpenThisResource"));
 		break;
 	
+	case kUIStrings_ContextualMenuPasteBracketedModeOff:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Protected “Paste” mode is off."), CFSTR("ContextualMenus"),
+													CFSTR("kUIStrings_ContextualMenuPasteBracketedModeOff"));
+		break;
+	
+	case kUIStrings_ContextualMenuPasteBracketedModeOn:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Protected “Paste” mode is on."), CFSTR("ContextualMenus"),
+													CFSTR("kUIStrings_ContextualMenuPasteBracketedModeOn"));
+		break;
+	
 	case kUIStrings_ContextualMenuPasteText:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Paste"), CFSTR("ContextualMenus"),
 													CFSTR("kUIStrings_ContextualMenuPasteText"));

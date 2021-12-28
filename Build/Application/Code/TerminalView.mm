@@ -7620,6 +7620,13 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
 			}
 			CFRelease(commandText), commandText = nullptr;
+			
+			// add an informational (disabled) item for Paste mode, similar to
+			// the one in the main menu; rely on existing item validation to
+			// automatically set the title text appropriately for the item
+			newItem = [[NSMenuItem alloc] initWithTitle:@"<Paste mode info>" action:@selector(performAssessBracketedPasteMode:) keyEquivalent:@""];
+			newItem.indentationLevel = 2; // (match main menu)
+			[inoutMenu addItem:newItem]; // add directly to prevent conditional hiding of the disabled item
 		}
 		
 		if (UIStrings_Copy(kUIStrings_ContextualMenuFindInThisWindow, commandText).ok())
@@ -10646,6 +10653,46 @@ canStopSpeaking:(id <NSValidatedUserInterfaceItem>)		anItem
 
 
 #pragma mark Actions: Commands_TerminalEditing
+
+
+/*!
+Displays information next to the Paste command that tells the
+user what will happen when it is used in the terminal (e.g.
+in bracketed Paste mode, programs like shells and editors
+may react differently to multi-line Paste).
+
+(2021.12)
+*/
+- (IBAction)
+performAssessBracketedPasteMode:(id)		sender
+{
+#pragma unused(sender)
+	// not a real action; used for updating menu state
+}
+- (id)
+canPerformAssessBracketedPasteMode:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+	// use same appearance as other “title items” (small, bold and disabled),
+	// which is accomplished by using an attributed string
+	if ([(id)anItem isKindOfClass:NSMenuItem.class])
+	{
+		NSMenuItem*				asMenuItem = STATIC_CAST(anItem, NSMenuItem*);
+		TerminalWindowRef		terminalWindow = Session_ReturnActiveTerminalWindow([self boundSession]);
+		TerminalScreenRef		screenBuffer = TerminalWindow_ReturnScreenWithFocus(terminalWindow);
+		Boolean					isBracketedPaste = ((nullptr != screenBuffer) && Terminal_PasteIsBracketed(screenBuffer));
+		CFRetainRelease			infoString(((isBracketedPaste)
+											? UIStrings_ReturnCopy(kUIStrings_ContextualMenuPasteBracketedModeOn)
+											: UIStrings_ReturnCopy(kUIStrings_ContextualMenuPasteBracketedModeOff)),
+											CFRetainRelease::kAlreadyRetained);
+		NSDictionary*			fontDict = @{NSFontAttributeName: [NSFont boldSystemFontOfSize:[NSFont smallSystemFontSize]]};
+		NSAttributedString*		attributedTitle = [[NSAttributedString alloc] initWithString:BRIDGE_CAST(infoString.returnCFStringRef(), NSString*) attributes:fontDict];
+		
+		
+		[asMenuItem setAttributedTitle:attributedTitle];
+	}
+	
+	return @(NO); // always disabled (displays state only)
+}
 
 
 /*!

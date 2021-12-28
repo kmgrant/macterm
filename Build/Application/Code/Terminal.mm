@@ -1251,6 +1251,7 @@ public:
 																	//!  sequence, but if the latter, ESC-character sequences are allowed instead
 	Boolean								modeApplicationKeys;		//!< DECKPAM mode: true only if the keypad is in application mode
 	Boolean								modeAutoWrap;				//!< DECAWM mode: true only if line wrapping is automatic
+	Boolean								modeBracketedPaste;			//!< true only if “bracketed Paste” was enabled (DEC private code 2004)
 	Boolean								modeCursorKeysForApp;		//!< DECCKM mode: true only if the keypad should not act as cursor movement arrows
 																	//!  (note also that the VT100 manual states this setting has no effect unless
 																	//!  the terminal is also in ANSI mode and the keypad is in application mode
@@ -2725,6 +2726,7 @@ Terminal_DebugDumpDetailedSnapshot		(TerminalScreenRef		inRef)
 																			dataPtr->originRegionPtr->lastRow);
 	Console_WriteValue("Mode: ANSI", dataPtr->modeANSIEnabled);
 	Console_WriteValue("Mode: auto-wrap", dataPtr->modeAutoWrap);
+	Console_WriteValue("Mode: bracketed Paste", dataPtr->modeBracketedPaste);
 	Console_WriteValue("Mode: cursor keys for application", dataPtr->modeCursorKeysForApp);
 	Console_WriteValue("Mode: application keys", dataPtr->modeApplicationKeys);
 	Console_WriteValue("Mode: origin redefined", dataPtr->modeOriginRedefined);
@@ -4138,6 +4140,31 @@ Terminal_LineWrapIsEnabled		(TerminalScreenRef	inRef)
 	}
 	return result;
 }// LineWrapIsEnabled
+
+
+/*!
+Returns "true" only if the given terminal will issue special
+sequences immediately before and immediately after any text
+is sent to the session via Paste (or equivalent, such as a
+drag-and-drop).
+
+This is normally enabled by the DEC private mode 2004.
+
+(2021.12)
+*/
+Boolean
+Terminal_PasteIsBracketed		(TerminalScreenRef	inRef)
+{
+	My_ScreenBufferPtr	dataPtr = getVirtualScreenData(inRef);
+	Boolean				result = false;
+	
+	
+	if (dataPtr != nullptr)
+	{
+		result = dataPtr->modeBracketedPaste;
+	}
+	return result;
+}// PasteIsBracketed
 
 
 /*!
@@ -15569,13 +15596,14 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 							// bracketed Paste mode
 							if (kParameterIsSet)
 							{
-								Console_WriteLine("request to set bracketed Paste mode");
+								//Console_WriteLine("request to set bracketed Paste mode"); // debug
 							}
 							else
 							{
-								Console_WriteLine("request to reset bracketed Paste mode");
+								//Console_WriteLine("request to reset bracketed Paste mode"); // debug
 							}
-							// UNIMPLEMENTED
+							inDataPtr->modeBracketedPaste = kParameterIsSet;
+							//changeNotifyForTerminal(inDataPtr, kTerminal_ChangePasteMode, inDataPtr->selfRef/* context */); // (not needed)
 							outHandled = true;
 							break;
 						
@@ -18604,6 +18632,7 @@ resetTerminal   (My_ScreenBufferPtr		inDataPtr,
 	inDataPtr->previous.drawingAttributes = kTextAttributes_Invalid;
 	inDataPtr->current.drawingAttributes.clear();
 	inDataPtr->current.latentAttributes.clear();
+	inDataPtr->modeBracketedPaste = false;
 	inDataPtr->modeInsertNotReplace = false;
 	inDataPtr->modeNewLineOption = false;
 	inDataPtr->emulator.isUTF8Encoding = (kCFStringEncodingUTF8 == inDataPtr->emulator.inputTextEncoding);
@@ -18625,6 +18654,7 @@ resetTerminal   (My_ScreenBufferPtr		inDataPtr,
 	tabStopInitialize(inDataPtr);
 	highlightLED(inDataPtr, 0/* zero means “turn off all LEDs” */);
 	
+	//changeNotifyForTerminal(inDataPtr, kTerminal_ChangePasteMode, inDataPtr->selfRef/* context */); // (not needed)
 	changeNotifyForTerminal(inDataPtr, kTerminal_ChangeReset, inDataPtr->selfRef/* context */);
 }// resetTerminal
 

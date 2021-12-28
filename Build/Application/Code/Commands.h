@@ -446,6 +446,8 @@ points in the responder chain, such as views or windows.)
 
 // actions
 	- (IBAction)
+	performAssessBracketedPasteMode:(id _Nullable)_; // not a real action; used for updating menu state
+	- (IBAction)
 	performCopyWithTabSubstitution:(id _Nullable)_;
 	- (IBAction)
 	performSelectEntireScrollbackBuffer:(id _Nullable)_;

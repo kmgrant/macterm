@@ -293,6 +293,7 @@ enum
 	kPreferences_TagMapDeleteToBackspace				= 'delb',	//!< data: "Boolean"
 	kPreferences_TagNewLineMapping						= 'newl',	//!< data: "UInt16" (Session_NewlineMode)
 	kPreferences_TagNoPasteWarning						= 'npwr',	//!< data: "Boolean"
+	kPreferences_TagPasteAllowBracketedMode				= 'pbrk',	//!< data: "Boolean"
 	kPreferences_TagPasteNewLineDelay					= 'pnld',	//!< data: "Preferences_TimeInterval"; stored as milliseconds, but scaled to Preferences_TimeInterval when used
 	kPreferences_TagScrollDelay							= 'scrd',	//!< data: "Preferences_TimeInterval"; stored as milliseconds, but scaled to Preferences_TimeInterval when used
 	kPreferences_TagServerHost							= 'host',	//!< data: "CFStringRef" (domain name or IP address)

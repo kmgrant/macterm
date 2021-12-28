@@ -1068,6 +1068,8 @@ Preferences_Init ()
 	My_PreferenceDefinition::create(kPreferences_TagPageKeysControlLocalTerminal,
 									CFSTR("command-key-terminal-end")/* TEMPORARY - one of several key names used */, kPreferences_DataTypeCFStringRef,
 									sizeof(Boolean), Quills::Prefs::TERMINAL);
+	My_PreferenceDefinition::createFlag(kPreferences_TagPasteAllowBracketedMode,
+										CFSTR("data-send-paste-allow-bracketed-mode"), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagPasteNewLineDelay,
 									CFSTR("data-send-paste-line-delay-milliseconds"), kPreferences_DataTypeCFNumberRef,
 									sizeof(Preferences_TimeInterval), Quills::Prefs::SESSION);
@@ -7533,6 +7535,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				case kPreferences_TagLineModeEnabled:
 				case kPreferences_TagLocalEchoEnabled:
 				case kPreferences_TagNoPasteWarning:
+				case kPreferences_TagPasteAllowBracketedMode:
 				case kPreferences_TagTektronixPAGEClearsScreen:
 					// all of these keys have Core Foundation Boolean values
 					if (false == inContextPtr->exists(keyName))
@@ -10009,6 +10012,7 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 			case kPreferences_TagLineModeEnabled:
 			case kPreferences_TagLocalEchoEnabled:
 			case kPreferences_TagNoPasteWarning:
+			case kPreferences_TagPasteAllowBracketedMode:
 			case kPreferences_TagTektronixPAGEClearsScreen:
 				{
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));

@@ -181,10 +181,12 @@ table(deftable).
 (defbottom). |\2(desc). Sessions set to send a keep-alive character on idle, do so every few minutes, according to this value.|
 (deftop). |(key). @data-send-local-echo-enabled@|(types). _true or false_|
 (defbottom). |\2(desc). Text input is immediately processed by the terminal.|
+(deftop). |(key). @data-send-paste-allow-bracketed-mode@|(types). _true or false_|
+(defbottom). |\2(desc). Allows “bracketed Paste” mode to be requested (via terminal sequence); once that mode is enabled, special terminal sequences are sent just before Paste occurs, and just after all text has been sent by Paste.  This also occurs for equivalent user-initiated actions such as drag-and-drop.  Furthermore, no warning is presented for Paste if the terminal is currently in bracketed mode; see @data-send-paste-no-warning@.|
 (deftop). |(key). @data-send-paste-line-delay-milliseconds@|(types). _integer_|
 (defbottom). |\2(desc). Instead of pasting as fast as possible, each new line is delayed by this number of milliseconds.  Also affects drag-and-drop text.|
 (deftop). |(key). @data-send-paste-no-warning@|(types). _true or false_|
-(defbottom). |\2(desc). Prevents the multi-line Paste warning from appearing, and does not join pasted lines together.|
+(defbottom). |\2(desc). Prevents the multi-line Paste warning from appearing, and does not join pasted lines together.  Note that the warning is implicitly disabled for terminals that are currently in “bracketed Paste” mode; see @data-send-paste-allow-bracketed-mode@.|
 (deftop). |(key). @format-favorite@|(types). _string_|
 (defbottom). |\2(desc). This Format collection is used by default when the session starts, unless the system is in Dark Mode and a dark-specific variant exists (see below).|
 (deftop). |(key). @format-favorite-dark@|(types). _string_|

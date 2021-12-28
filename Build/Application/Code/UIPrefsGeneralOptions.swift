@@ -127,7 +127,7 @@ public struct UIPrefsGeneralOptions_View : View {
 				}
 				UICommon_OptionLineView("", noDefaultSpacing: true) {
 					Toggle("Don’t warn about multi–line Paste", isOn: $viewModel.doNotWarnAboutMultiLinePaste)
-						.macTermToolTipText("Set if the “Multi-Line Paste” alert should be suppressed and multi-line text should be inserted as-is automatically.")
+						.macTermToolTipText("Set if the “Multi-Line Paste” alert should be suppressed and multi-line text should be inserted as-is automatically.  Note that this warning is automatically suppressed while terminals are in “bracketed Paste mode”, which may be supported by programs that you run such as shells and text editors.")
 				}
 			}
 			Spacer().asMacTermSectionSpacingV()

@@ -483,6 +483,9 @@ Boolean
 Boolean
 	Terminal_LineWrapIsEnabled				(TerminalScreenRef			inScreen);
 
+Boolean
+	Terminal_PasteIsBracketed				(TerminalScreenRef			inScreen);
+
 void
 	Terminal_Reset							(TerminalScreenRef			inScreen,
 											 Terminal_ResetFlags		inFlags = kTerminal_ResetFlagsAll);
