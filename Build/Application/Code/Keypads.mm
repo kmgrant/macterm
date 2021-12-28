@@ -156,6 +156,10 @@ NSObject< Keypads_ArrangeWindowsResponder >*	gArrangeWindowsResponder = nil;
 NSObject< Keypads_ControlKeyResponder >*		gControlKeysResponder = nil;
 Boolean						gControlKeysMayAutoHide = false;
 Session_FunctionKeyLayout	gFunctionKeysLayout = kSession_FunctionKeyLayoutVT220;
+Keypads_ArrangeWindowPanelController*	gKeypads_ArrangeWindowPanelController = nil;
+Keypads_ControlKeysPanelController*		gKeypads_ControlKeysPanelController = nil;
+Keypads_FunctionKeysPanelController*	gKeypads_FunctionKeysPanelController = nil;
+Keypads_VT220KeysPanelController*		gKeypads_VT220KeysPanelController = nil;
 
 }// anonymous namespace
 
@@ -319,22 +323,42 @@ Keypads_IsVisible	(Keypads_WindowType		inKeypad)
 	switch (inKeypad)
 	{
 	case kKeypads_WindowTypeArrangeWindow:
-		result = (YES == [[[Keypads_ArrangeWindowPanelController sharedArrangeWindowPanelController] window] isVisible]);
+		// check for panel first to avoid auto-creation just for the sake
+		// of looking at the visibility state
+		if (nil != gKeypads_ArrangeWindowPanelController)
+		{
+			result = (YES == [[[Keypads_ArrangeWindowPanelController sharedArrangeWindowPanelController] window] isVisible]);
+		}
 		break;
 	
 	case kKeypads_WindowTypeControlKeys:
-		result = ((YES == [[[Keypads_ControlKeysPanelController sharedControlKeysPanelController] window] isVisible]) ||
-					(YES == [[[Keypads_ControlKeysPanelController sharedControlKeysPanelController] window] isMiniaturized]));
+		// check for panel first to avoid auto-creation just for the sake
+		// of looking at the visibility state
+		if (nil != gKeypads_ControlKeysPanelController)
+		{
+			result = ((YES == [[[Keypads_ControlKeysPanelController sharedControlKeysPanelController] window] isVisible]) ||
+						(YES == [[[Keypads_ControlKeysPanelController sharedControlKeysPanelController] window] isMiniaturized]));
+		}
 		break;
 	
 	case kKeypads_WindowTypeFunctionKeys:
-		result = ((YES == [[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] window] isVisible]) ||
-					(YES == [[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] window] isMiniaturized]));
+		// check for panel first to avoid auto-creation just for the sake
+		// of looking at the visibility state
+		if (nil != gKeypads_FunctionKeysPanelController)
+		{
+			result = ((YES == [[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] window] isVisible]) ||
+						(YES == [[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] window] isMiniaturized]));
+		}
 		break;
 	
 	case kKeypads_WindowTypeVT220Keys:
-		result = ((YES == [[[Keypads_VT220KeysPanelController sharedVT220KeysPanelController] window] isVisible]) ||
-					(YES == [[[Keypads_VT220KeysPanelController sharedVT220KeysPanelController] window] isMiniaturized]));
+		// check for panel first to avoid auto-creation just for the sake
+		// of looking at the visibility state
+		if (nil != gKeypads_VT220KeysPanelController)
+		{
+			result = ((YES == [[[Keypads_VT220KeysPanelController sharedVT220KeysPanelController] window] isVisible]) ||
+						(YES == [[[Keypads_VT220KeysPanelController sharedVT220KeysPanelController] window] isMiniaturized]));
+		}
 		break;
 	
 	default:
@@ -687,9 +711,6 @@ sendKey	(UInt8		inKey)
 @implementation Keypads_ArrangeWindowPanelController //{
 
 
-static Keypads_ArrangeWindowPanelController*	gKeypads_ArrangeWindowPanelController = nil;
-
-
 #pragma mark Class Methods
 
 
@@ -882,9 +903,6 @@ doneArrangingWithViewModel:(UIArrangeWindow_Model*)		viewModel
 
 #pragma mark -
 @implementation Keypads_ControlKeysPanelController //{
-
-
-static Keypads_ControlKeysPanelController*		gKeypads_ControlKeysPanelController = nil;
 
 
 /*!
@@ -1159,9 +1177,6 @@ windowWillClose:(NSNotification*)	aNotification
 
 #pragma mark -
 @implementation Keypads_FunctionKeysPanelController //{
-
-
-static Keypads_FunctionKeysPanelController*		gKeypads_FunctionKeysPanelController = nil;
 
 
 /*!
@@ -1498,9 +1513,6 @@ saveChangesWithViewModel:(UIKeypads_Model*)		aViewModel
 
 #pragma mark -
 @implementation Keypads_VT220KeysPanelController
-
-
-static Keypads_VT220KeysPanelController*	gKeypads_VT220KeysPanelController = nil;
 
 
 /*!
