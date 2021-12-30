@@ -74,11 +74,15 @@ if __name__ == "__main__":
     DEFAULT_QUILLS_FW_VER = "B"
     DEFAULT_QUILLS_PYLIB_VER = "3.9"
     DEFAULT_WRAPPER = "MacTerm_python%s_wrap" % DEFAULT_QUILLS_PYLIB_VER
-    if MAC_OS_NAME in ("Big Sur", "Catalina", "Mojave", "Yosemite", "El Capitán",
-                       "Sierra", "High Sierra"):
+    if MAC_OS_NAME in ("Monterey", "Big Sur", "Catalina"):
         PY_INTERPRETER = path_join(MACOS_DIR, DEFAULT_WRAPPER)
         QUILLS_FW_VER = DEFAULT_QUILLS_FW_VER
         QUILLS_PYLIB_VER = DEFAULT_QUILLS_PYLIB_VER
+    elif MAC_OS_NAME in ("Mojave", "Yosemite", "El Capitán", "Sierra", "High Sierra"):
+        warn("This MacTerm version requires at least macOS 10.15 ",
+             "(Catalina).  Visit 'https://www.macterm.net/' to download",
+             "version 4.1.0 for use on older systems.")
+        sys.exit(1)
     elif MAC_OS_NAME in ("Mavericks", "Mountain Lion", "Lion", "Snow Leopard",
                          "Leopard", "Tiger", "Panther"):
         warn("This MacTerm version requires at least macOS 10.10 ",
