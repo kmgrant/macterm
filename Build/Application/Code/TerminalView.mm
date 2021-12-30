@@ -12658,6 +12658,10 @@ mouseDown:(NSEvent*)	anEvent
 Implements the “focus follows mouse” preference by making
 the window the key window when the mouse moves inside it.
 
+This is suppressed in certain situations that would lead
+to a bad user experience (e.g. where losing focus may
+cause a window to disappear).
+
 See also "mouseExited:" and properties of type "NSTrackingArea".
 
 (2021.08)
@@ -12668,7 +12672,9 @@ mouseEntered:(NSEvent*)		anEvent
 	if (anEvent.trackingArea == self.focusFollowsMouseTrackingArea)
 	{
 		//NSLog(@"focus following mouse into: %@", self); // debug
-		if (NO == NSApp.keyWindow.isModalPanel)
+		if ((NO == NSApp.keyWindow.isModalPanel) &&
+			(self.window != NSApp.keyWindow.parentWindow)/* e.g. when a Find panel is open */ &&
+			(self.window != NSApp.keyWindow.parentWindow.parentWindow)/* e.g. “Custom New Session” scenario when remote server popover is also visible */)
 		{
 			[self.window makeKeyWindow];
 			UNUSED_RETURN(BOOL)[self.window makeFirstResponder:self];
