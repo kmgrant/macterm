@@ -10,7 +10,7 @@
 /*###############################################################
 
 	Universal Defines
-	© 1998-2021 by Kevin Grant
+	© 1998-2022 by Kevin Grant
 	
 	This program is free software; you can redistribute it or
 	modify it under the terms of the GNU General Public License

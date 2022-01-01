@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20220101',
     '20211227',
     '20211222',
     '20210220',
@@ -615,6 +616,8 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20220101': [
+    ],
     '20211227': [
         'Implemented "bracketed Paste mode", which is a terminal feature that allows the program running in the terminal to request extra escape sequences before and after text inserted by Paste (or equivalent user-initiated actions such as drag-and-drop).  Many modern versions of shells, text editors and other programs will support this mode.',
         'The Paste menu command (in both main menu and contextual menus) now displays information on the current state of the protected Paste mode, to give you a better idea what will happen when Paste is used.',
