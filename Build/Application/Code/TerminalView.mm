@@ -547,6 +547,13 @@ Private properties.
 	//! Internal version of associated TerminalViewRef.
 	@property (assign) My_TerminalViewPtr
 	internalViewPtr; // weak
+	//! Set only when menu tracking ends, to keep track of time
+	//! elapsed when later handling focus-follows-mouse.  If a
+	//! menu item was just handled, focus-follows-mouse is
+	//! delayed to prevent a selected command from inadvertently
+	//! applying to the unintended window.
+	@property (assign) CFAbsoluteTime
+	menuEndTrackingTime;
 	//! Current state of modifier keys, used to set an appropriate
 	//! cursor (that should be consistent with whatever action
 	//! would be performed by clicking or dragging with the same
@@ -597,6 +604,14 @@ The private class interface.
 	sender:(id)_;
 	- (void)
 	setFocusFollowsMouseTrackingAreasEnabled:(BOOL)_;
+
+@end //}
+
+
+/*!
+Private properties.
+*/
+@interface TerminalView_Controller () //{
 
 @end //}
 
@@ -10239,6 +10254,10 @@ initWithFrame:(NSRect)		aFrame
 												true/* call immediately to get initial value */);
 			assert(kPreferences_ResultOK == error);
 		}
+		
+		// watch for menu tracking to alter focus-follows-mouse behavior
+		[self whenObject:NSApp.mainMenu postsNote:NSMenuDidEndTrackingNotification
+							performSelector:@selector(menuBarDidEndTracking:)];
 	}
 	return self;
 }// initWithFrame:
@@ -10252,6 +10271,7 @@ Destructor.
 - (void)
 dealloc
 {
+	[self ignoreWhenObject:NSApp.mainMenu postsNote:NSMenuDidEndTrackingNotification];
 	UNUSED_RETURN(Preferences_Result)Preferences_StopMonitoring(self.preferenceChangeListener.listenerRef,
 																kPreferences_TagFocusFollowsMouse);
 	[self removeObserversSpecifiedInArray:self.registeredObservers];
@@ -12055,6 +12075,38 @@ context:(void*)						aContext
 }// observeValueForKeyPath:ofObject:change:context:
 
 
+#pragma mark NSMenuDidEndTrackingNotification
+
+
+/*!
+Notified when menu bar tracking has ended.  This is
+used to delay focus-follows-mouse slightly, otherwise
+the selected menu command might inadvertently apply
+to a newly-hovered-over window (e.g. the window that
+happens to be under the menu item). 
+
+(2022.04)
+*/
+- (void)
+menuBarDidEndTracking:(NSNotification*)		aNotification
+{
+	NSMenu*		trackedMenuBar = REINTERPRET_CAST(aNotification.object, NSMenu*);
+	
+	
+	if ([NSApp mainMenu] != trackedMenuBar)
+	{
+		// note: apparently AppKit will send this notification for ANY menu
+		// (such as toolbars or pop-up menus); ignore if not the main menu bar
+		//Console_Warning(Console_WriteLine, "'menuBarDidEndTracking:' received unexpected notification for different menu");
+	}
+	else
+	{
+		Console_WriteLine("did end menu tracking"); // debug
+		self.menuEndTrackingTime = CFAbsoluteTimeGetCurrent();
+	}
+}// menuBarDidEndTracking:
+
+
 #pragma mark NSResponder
 
 
@@ -12674,7 +12726,8 @@ mouseEntered:(NSEvent*)		anEvent
 		//NSLog(@"focus following mouse into: %@", self); // debug
 		if ((NO == NSApp.keyWindow.isModalPanel) &&
 			(self.window != NSApp.keyWindow.parentWindow)/* e.g. when a Find panel is open */ &&
-			(self.window != NSApp.keyWindow.parentWindow.parentWindow)/* e.g. “Custom New Session” scenario when remote server popover is also visible */)
+			(self.window != NSApp.keyWindow.parentWindow.parentWindow)/* e.g. “Custom New Session” scenario when remote server popover is also visible */ &&
+			((CFAbsoluteTimeGetCurrent() - self.menuEndTrackingTime) > 1.0/* arbitrary */))
 		{
 			[self.window makeKeyWindow];
 			UNUSED_RETURN(BOOL)[self.window makeFirstResponder:self];
