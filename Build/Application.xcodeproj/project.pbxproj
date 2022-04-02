@@ -1512,6 +1512,7 @@
 				WARNING_CFLAGS = (
 					"-Wall",
 					"-Wextra",
+					"-Wno-unused-but-set-variable",
 				);
 			};
 			name = ForRelease;
@@ -1698,6 +1699,7 @@
 				WARNING_CFLAGS = (
 					"-Wall",
 					"-Wextra",
+					"-Wno-unused-but-set-variable",
 				);
 			};
 			name = ForDebugging;
