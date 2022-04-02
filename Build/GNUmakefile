@@ -342,7 +342,7 @@ install-py-framework:
 	$(MAKEFILE_DIR)/VersionInfo.sh perl -e 'print "build_number = $$ENV{MY_BUILD_NUMBER}\n"' >> $(DEST_PY_CODE_TOP)/versions.py
 	$(MAKEFILE_DIR)/VersionInfo.sh perl -e 'print "prefs_version = $$ENV{MY_PREFS_VERSION}\n"' >> $(DEST_PY_CODE_TOP)/versions.py
 	@# validate generated code...
-	python $(DEST_PY_CODE_TOP)/versions.py
+	python3 $(DEST_PY_CODE_TOP)/versions.py
 
 .PHONY: clean-py-framework
 clean-py-framework:
