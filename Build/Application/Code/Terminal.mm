@@ -129,6 +129,7 @@ enum
 	kMy_ParamPrivate		= -2,	//!< meta-value; means that the parameters came from an ESC[?... sequence
 	kMy_ParamSecondaryDA	= -3,	//!< meta-value; means that the parameters came from an ESC[>... sequence
 	kMy_ParamTertiaryDA		= -4,	//!< meta-value; means that the parameters came from an ESC[=... sequence
+	kMy_ParamOverflow		= -5,	//!< meta-value; means that the parameter value has overflowed the maximum allowed storage
 };
 
 /*!
@@ -11176,15 +11177,36 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	case kStateCSIParamDigit8:
 	case kStateCSIParamDigit9:
 		{
-			SInt16&		valueRef = inDataPtr->emulator.argList[inDataPtr->emulator.argLastIndex];
+			SInt16&			valueRef = inDataPtr->emulator.argList[inDataPtr->emulator.argLastIndex];
+			SInt16 const	digitValue = (inOldNew.second - kStateCSIParamDigit0); // WARNING: requires states to be defined consecutively
 			
 			
-			if (valueRef < 0)
+			// remove any undefined-value placeholder (-1)
+			if (valueRef == kMy_ParamUndefined)
 			{
 				valueRef = 0;
 			}
-			valueRef *= 10;
-			valueRef += (inOldNew.second - kStateCSIParamDigit0); // WARNING: requires states to be defined consecutively
+			
+			// compute new value that is safe to store; reject overly-large final values
+			// (can test this with a very long sequence of digits in a CSI parameter)
+			SInt16		newValue = valueRef;
+			if (__builtin_mul_overflow(newValue, 10, &newValue))
+			{
+				Console_Warning(Console_WriteLine, "CSI parameter value rejected for being too large (multiplication overflow)"); // debug
+				valueRef = kMy_ParamOverflow;
+			}
+			else
+			{
+				if (__builtin_add_overflow(newValue, digitValue, &newValue))
+				{
+					Console_Warning(Console_WriteLine, "CSI parameter value rejected for being too large (add overflow)"); // debug
+					valueRef = kMy_ParamOverflow;
+				}
+				else
+				{
+					valueRef = newValue;
+				}
+			}
 		}
 		break;
 	

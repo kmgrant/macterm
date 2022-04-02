@@ -33,6 +33,9 @@
 #include "SixelDecoder.h"
 #include <UniversalDefines.h>
 
+// standard-C includes
+#include <climits>
+
 // Mac includes
 #include <ApplicationServices/ApplicationServices.h>
 #include <CoreServices/CoreServices.h>
@@ -43,6 +46,15 @@
 
 // application includes
 #include "DebugInterface.h"
+
+
+
+#pragma mark Constants
+namespace {
+
+SInt16 const	kMy_IntegerAccumulatorOverflowValue = SHRT_MIN;
+
+} // anonymous namespace
 
 
 
@@ -567,7 +579,7 @@ stateDeterminant	(UInt8		inNextByte,
 	{
 		// not always a problem, just suspicious...
 		Console_Warning(Console_WriteValueFourChars, "will still be in same state", result);
-		Console_Warning(Console_WriteValueCharacter, "same state with input byte", inNextByte); 
+		Console_Warning(Console_WriteValueCharacter, "same state with input byte", inNextByte);
 	}
 #endif
 	
@@ -644,12 +656,26 @@ stateTransition		(State		inNextState)
 			this->parameterDecoder.stateTransition(this->paramDecoderPendingState);
 			for (SInt16 paramValue : this->parameterDecoder.parameterValues)
 			{
+				UInt16 const	paramIndex = i;
+				
+				
+				++i;
+				
+				if (false == this->parameterDecoder.isValidValue(paramValue))
+				{
+					if (DebugInterface_LogsSixelDecoderErrors())
+					{
+						Console_WriteLine("found raster attributes parameter with invalid or overflowed value");
+					}
+					continue;
+				}
+				
 				if (DebugInterface_LogsSixelDecoderState())
 				{
 					Console_WriteValue("found raster attributes parameter", paramValue);
 				}
 				
-				switch (i)
+				switch (paramIndex)
 				{
 				case 0:
 					// pan (pixel aspect ratio, numerator)
@@ -695,7 +721,6 @@ stateTransition		(State		inNextState)
 					}
 					break;
 				}
-				++i;
 			}
 		}
 		break;
@@ -747,18 +772,70 @@ stateTransition		(State		inNextState)
 		case '7':
 		case '8':
 		case '9':
+			// modify repeat count
 			{
-				// modify repeat count
-				if (this->integerAccumulator < 0)
+				SInt16&			valueRef = this->integerAccumulator;
+				SInt16 const	digitValue = (this->byteRegister - '0');
+				char const*		overflowType = nullptr;
+				
+				
+				// remove any undefined-value placeholder (-1)
+				if (valueRef == kParameterDecoder_ValueUndefined)
 				{
-					this->integerAccumulator = 0;
+					valueRef = 0;
 				}
-				this->integerAccumulator *= 10;
-				this->integerAccumulator += (this->byteRegister - '0');
-				this->repetitionCount = this->integerAccumulator; 
-				if (DebugInterface_LogsSixelDecoderState())
+				
+				// compute new value that is safe to store; reject overly-large final values
+				// (can test this with a very long sequence of digits in a repeat count);
+				//
+				// this risk is documented in more detail at these links:
+				// - https://nvd.nist.gov/vuln/detail/CVE-2022-24130
+				// - https://www.openwall.com/lists/oss-security/2022/01/30/3
+				SInt16		newValue = valueRef;
+				if (__builtin_mul_overflow(newValue, 10, &newValue))
 				{
-					//Console_WriteValue("updated repetition count", this->repetitionCount);
+					overflowType = "multiplication";
+				}
+				else
+				{
+					if (__builtin_add_overflow(newValue, digitValue, &newValue))
+					{
+						overflowType = "add";
+					}
+					else
+					{
+						if (newValue > kSixelDecoder_RepeatCountMaximum)
+						{
+							overflowType = "maximum value";
+						}
+						else
+						{
+							this->integerAccumulator = newValue;
+							this->repetitionCount = this->integerAccumulator;
+							if (DebugInterface_LogsSixelDecoderState())
+							{
+								//Console_WriteValue("updated repetition count", this->repetitionCount);
+							}
+						}
+					}
+				}
+				
+				if (nullptr != overflowType)
+				{
+					// for debug, report at most one overflow per value (may trigger
+					// multiple times through state machine but this resets when
+					// the accumulator does)
+					if (kMy_IntegerAccumulatorOverflowValue != this->integerAccumulator)
+					{
+						if (DebugInterface_LogsSixelDecoderErrors())
+						{
+							Console_WriteValueCString("repetition count too large; overflow type", overflowType);
+						}
+					}
+					else
+					{
+						this->integerAccumulator = kMy_IntegerAccumulatorOverflowValue;
+					}
 				}
 			}
 			break;
@@ -825,16 +902,21 @@ stateTransition		(State		inNextState)
 		if (kPreviousState != inNextState)
 		{
 			// process all accumulated data
-			UInt16		colorNumber = 0;
+			SInt16		colorNumber = 0;
 			
 			
 			this->parameterDecoder.stateTransition(this->paramDecoderPendingState);
 			
 			if (this->parameterDecoder.parameterValues.size() > 0)
 			{
-				colorNumber = ((kParameterDecoder_Undefined == this->parameterDecoder.parameterValues[0])
-								? 0
-								: this->parameterDecoder.parameterValues[0]);
+				if (false == this->parameterDecoder.getParameterOrDefault(0, 0/* default value */, colorNumber))
+				{
+					if (DebugInterface_LogsSixelDecoderErrors())
+					{
+						Console_WriteLine("failed to read valid color number; ignoring value and resetting to 0");
+						colorNumber = 0;
+					}
+				}
 				
 				if (DebugInterface_LogsSixelDecoderState())
 				{
@@ -851,12 +933,27 @@ stateTransition		(State		inNextState)
 				}
 				else
 				{
-					UInt16		i = 0;
+					UInt16		currentIndex = 0;
 					
 					
-					for (SInt16 paramValue : this->parameterDecoder.parameterValues)
+					while (currentIndex < this->parameterDecoder.parameterValues.size())
 					{
-						switch (i)
+						UInt16 const	startIndex = currentIndex;
+						SInt16 const	paramValue = this->parameterDecoder.parameterValues[currentIndex];
+						
+						
+						++currentIndex;
+						
+						if (false == this->parameterDecoder.isValidValue(paramValue))
+						{
+							if (DebugInterface_LogsSixelDecoderErrors())
+							{
+								Console_WriteLine("found set-color parameter with invalid or overflowed value");
+							}
+							continue;
+						}
+						
+						switch (startIndex)
 						{
 						case 0:
 							// ignore (color number was already processed above)
@@ -867,56 +964,88 @@ stateTransition		(State		inNextState)
 							{
 							case 1:
 								// hue, lightness and saturation (HLS), a.k.a. hue, saturation and brightness (HSB)
-								if ((i + 3) >= this->parameterDecoder.parameterValues.size())
 								{
-									if (DebugInterface_LogsSixelDecoderErrors())
-									{
-										Console_WriteLine("color format: error, insufficient parameters for hue, lightness and saturation (HLS)");
-									}
-								}
-								else
-								{
-									if (DebugInterface_LogsSixelDecoderState())
-									{
-										Console_WriteValue("HLS color, hue component (°)", this->parameterDecoder.parameterValues[i + 1]);
-										Console_WriteValue("HLS color, lightness component (%)", this->parameterDecoder.parameterValues[i + 2]);
-										Console_WriteValue("HLS color, saturation component (%)", this->parameterDecoder.parameterValues[i + 3]);
-									}
+									SInt16		component1Value = kParameterDecoder_ValueUndefined;
+									SInt16		component2Value = kParameterDecoder_ValueUndefined;
+									SInt16		component3Value = kParameterDecoder_ValueUndefined;
 									
-									if (nullptr != this->colorCreator)
+									
+									currentIndex += 3;
+									if ((false == this->parameterDecoder.getParameter(startIndex + 1, component1Value)) ||
+										(false == this->parameterDecoder.getParameter(startIndex + 2, component2Value)) ||
+										(false == this->parameterDecoder.getParameter(startIndex + 3, component3Value)))
 									{
-										this->colorCreator(colorNumber, kSixelDecoder_ColorTypeHLS,
-															this->parameterDecoder.parameterValues[i + 1],
-															this->parameterDecoder.parameterValues[i + 2],
-															this->parameterDecoder.parameterValues[i + 3]);
+										if (DebugInterface_LogsSixelDecoderErrors())
+										{
+											Console_WriteLine("color format: error, invalid or overflowed value in one or more parameters for hue, lightness and saturation (HLS)");
+										}
+										
+										if (currentIndex >= this->parameterDecoder.parameterValues.size())
+										{
+											currentIndex = this->parameterDecoder.parameterValues.size();
+											if (DebugInterface_LogsSixelDecoderErrors())
+											{
+												Console_WriteLine("color format: error, insufficient parameters for hue, lightness and saturation (HLS)");
+											}
+										}
+									}
+									else
+									{
+										if (DebugInterface_LogsSixelDecoderState())
+										{
+											Console_WriteValue("HLS color, hue component (°)", component1Value);
+											Console_WriteValue("HLS color, lightness component (%)", component2Value);
+											Console_WriteValue("HLS color, saturation component (%)", component3Value);
+										}
+										
+										if (nullptr != this->colorCreator)
+										{
+											this->colorCreator(colorNumber, kSixelDecoder_ColorTypeHLS, component1Value, component2Value, component3Value);
+										}
 									}
 								}
 								break;
 							
 							case 2:
 								// red, green, blue (RGB)
-								if ((i + 3) >= this->parameterDecoder.parameterValues.size())
 								{
-									if (DebugInterface_LogsSixelDecoderErrors())
-									{
-										Console_WriteLine("color format: error, insufficient parameters for red, green, blue (RGB)");
-									}
-								}
-								else
-								{
-									if (DebugInterface_LogsSixelDecoderState())
-									{
-										Console_WriteValue("RGB color, red component (%)", this->parameterDecoder.parameterValues[i + 1]);
-										Console_WriteValue("RGB color, green component (%)", this->parameterDecoder.parameterValues[i + 2]);
-										Console_WriteValue("RGB color, blue component (%)", this->parameterDecoder.parameterValues[i + 3]);
-									}
+									SInt16		component1Value = kParameterDecoder_ValueUndefined;
+									SInt16		component2Value = kParameterDecoder_ValueUndefined;
+									SInt16		component3Value = kParameterDecoder_ValueUndefined;
 									
-									if (nullptr != this->colorCreator)
+									
+									currentIndex += 3;
+									if ((false == this->parameterDecoder.getParameter(startIndex + 1, component1Value)) ||
+										(false == this->parameterDecoder.getParameter(startIndex + 2, component2Value)) ||
+										(false == this->parameterDecoder.getParameter(startIndex + 3, component3Value)))
 									{
-										this->colorCreator(colorNumber, kSixelDecoder_ColorTypeRGB,
-															this->parameterDecoder.parameterValues[i + 1],
-															this->parameterDecoder.parameterValues[i + 2],
-															this->parameterDecoder.parameterValues[i + 3]);
+										if (DebugInterface_LogsSixelDecoderErrors())
+										{
+											Console_WriteLine("color format: error, invalid or overflowed value in one or more parameters for red, green, blue (RGB)");
+										}
+										
+										if (currentIndex >= this->parameterDecoder.parameterValues.size())
+										{
+											currentIndex = this->parameterDecoder.parameterValues.size();
+											if (DebugInterface_LogsSixelDecoderErrors())
+											{
+												Console_WriteLine("color format: error, insufficient parameters for red, green, blue (RGB)");
+											}
+										}
+									}
+									else
+									{
+										if (DebugInterface_LogsSixelDecoderState())
+										{
+											Console_WriteValue("RGB color, red component (%)", component1Value);
+											Console_WriteValue("RGB color, green component (%)", component2Value);
+											Console_WriteValue("RGB color, blue component (%)", component3Value);
+										}
+										
+										if (nullptr != this->colorCreator)
+										{
+											this->colorCreator(colorNumber, kSixelDecoder_ColorTypeRGB, component1Value, component2Value, component3Value);
+										}
 									}
 								}
 								break;
@@ -938,7 +1067,6 @@ stateTransition		(State		inNextState)
 							}
 							break;
 						}
-						++i;
 					}
 				}
 			}
@@ -973,5 +1101,6 @@ stateTransition		(State		inNextState)
 		break;
 	}
 }// SixelDecoder_StateMachine::stateTransition
+
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

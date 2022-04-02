@@ -29,6 +29,9 @@
 #include "ParameterDecoder.h"
 #include <UniversalDefines.h>
 
+// standard-C includes
+#include <climits>
+
 // Mac includes
 #include <ApplicationServices/ApplicationServices.h>
 #include <CoreServices/CoreServices.h>
@@ -40,7 +43,8 @@
 
 #pragma mark Constants
 
-SInt16 const		kParameterDecoder_Undefined = -1; // see header file
+SInt16 const		kParameterDecoder_ValueOverflow = SHRT_MIN; // see header file
+SInt16 const		kParameterDecoder_ValueUndefined = (SHRT_MIN + 1); // see header file
 
 #pragma mark Internal Method Prototypes
 namespace {
@@ -50,6 +54,7 @@ Boolean		unitTest_StateMachine_001		();
 Boolean		unitTest_StateMachine_002		();
 Boolean		unitTest_StateMachine_003		();
 Boolean		unitTest_StateMachine_004		();
+Boolean		unitTest_StateMachine_005		();
 
 } // anonymous namespace
 
@@ -79,6 +84,7 @@ ParameterDecoder_RunTests ()
 	++totalTests; if (false == unitTest_StateMachine_002()) ++failedTests;
 	++totalTests; if (false == unitTest_StateMachine_003()) ++failedTests;
 	++totalTests; if (false == unitTest_StateMachine_004()) ++failedTests;
+	++totalTests; if (false == unitTest_StateMachine_005()) ++failedTests;
 	
 	Console_WriteUnitTestReport("Terminal Parameter Decoder", failedTests, totalTests);
 }// RunTests
@@ -220,25 +226,50 @@ stateTransition		(State		inNextState)
 	switch (inNextState)
 	{
 	case kStateSeenDigit:
+		// update parameter value
 		{
-			// update parameter value
+			SInt16 const	digitValue = (this->byteRegister - '0'); 
+			
+			
+			// treat empty list the same as one with a free slot
 			if (this->parameterValues.empty())
 			{
-				this->parameterValues.push_back(kParameterDecoder_Undefined);
+				this->parameterValues.push_back(kParameterDecoder_ValueUndefined);
 			}
-			if (kParameterDecoder_Undefined == this->parameterValues.back())
+			
+			// remove any undefined-value placeholder
+			if (kParameterDecoder_ValueUndefined == this->parameterValues.back())
 			{
 				this->parameterValues.back() = 0;
 			}
-			this->parameterValues.back() *= 10;
-			this->parameterValues.back() += (this->byteRegister - '0');
+			
+			// compute new value that is safe to store; reject overly-large final values
+			// (can test this with a very long sequence of digits in a parameter)
+			SInt16		newValue = this->parameterValues.back();
+			if (__builtin_mul_overflow(newValue, 10, &newValue))
+			{
+				//Console_Warning(Console_WriteLine, "parameter value rejected for being too large (multiplication overflow)"); // debug
+				this->parameterValues.back() = kParameterDecoder_ValueOverflow;
+			}
+			else
+			{
+				if (__builtin_add_overflow(newValue, digitValue, &newValue))
+				{
+					//Console_Warning(Console_WriteLine, "parameter value rejected for being too large (add overflow)"); // debug
+					this->parameterValues.back() = kParameterDecoder_ValueOverflow;
+				}
+				else
+				{
+					this->parameterValues.back() = newValue;
+				}
+			}
 		}
 		break;
 	
 	case kStateResetParameter:
 		// the next character is a delimiter; define a new parameter
 		//Console_WriteValue("define parameter with value", this->parameterValues.back()); // debug
-		parameterValues.push_back(kParameterDecoder_Undefined);
+		parameterValues.push_back(kParameterDecoder_ValueUndefined);
 		break;
 	
 	case kStateTerminated:
@@ -422,7 +453,7 @@ unitTest_StateMachine_002 ()
 		if (result)
 		{
 			auto const		testValue3 = decoderObject.parameterValues[1];
-			Console_TestAssertUpdate(result, kParameterDecoder_Undefined == testValue3,
+			Console_TestAssertUpdate(result, kParameterDecoder_ValueUndefined == testValue3,
 										Console_WriteValue, "leading-zero test: actual 2nd parameter", testValue3);
 		}
 	}
@@ -491,7 +522,7 @@ unitTest_StateMachine_003 ()
 										Console_WriteValue, "multiple parameters test: actual parameter value", testValue2);
 			Console_TestAssertUpdate(result, 30 == testValue3,
 										Console_WriteValue, "multiple parameters test: actual parameter value", testValue3);
-			Console_TestAssertUpdate(result, kParameterDecoder_Undefined == testValue4,
+			Console_TestAssertUpdate(result, kParameterDecoder_ValueUndefined == testValue4,
 										Console_WriteValue, "multiple parameters test: actual parameter value", testValue4);
 			Console_TestAssertUpdate(result, 591 == testValue5,
 										Console_WriteValue, "multiple parameters test: actual parameter value", testValue5);
@@ -579,7 +610,7 @@ unitTest_StateMachine_004 ()
 										Console_WriteValue, "alternate delimiter test: actual parameter value", testValue2);
 			Console_TestAssertUpdate(result, 10 == testValue3,
 										Console_WriteValue, "alternate delimiter test: actual parameter value", testValue3);
-			Console_TestAssertUpdate(result, kParameterDecoder_Undefined == testValue4,
+			Console_TestAssertUpdate(result, kParameterDecoder_ValueUndefined == testValue4,
 										Console_WriteValue, "alternate delimiter test: actual parameter value", testValue4);
 			Console_TestAssertUpdate(result, 123 == testValue5,
 										Console_WriteValue, "alternate delimiter test: actual parameter value", testValue5);
@@ -588,6 +619,92 @@ unitTest_StateMachine_004 ()
 	
 	return result;
 }// unitTest_StateMachine_004
+
+
+/*!
+Tests ParameterDecoder_StateMachine with parameter
+values that exceed storage size and/or specified
+limits.
+
+Returns "true" if ALL assertions pass; "false" is
+returned if any fail, however messages should be
+printed for ALL assertion failures regardless.
+
+(2022.02)
+*/
+Boolean
+unitTest_StateMachine_005 ()
+{
+	ParameterDecoder_StateMachine	decoderObject(';');
+	Boolean							byteNotUsed = false;
+	Boolean							result = true;
+	
+	
+	// define integer parameters with oversized values
+	decoderObject.goNextState('1', byteNotUsed);
+	decoderObject.goNextState('2', byteNotUsed);
+	decoderObject.goNextState('3', byteNotUsed);
+	decoderObject.goNextState('4', byteNotUsed);
+	decoderObject.goNextState('5', byteNotUsed);
+	decoderObject.goNextState(';', byteNotUsed);
+	decoderObject.goNextState('3', byteNotUsed);
+	decoderObject.goNextState('2', byteNotUsed);
+	decoderObject.goNextState('7', byteNotUsed);
+	decoderObject.goNextState('6', byteNotUsed);
+	decoderObject.goNextState('7', byteNotUsed);
+	decoderObject.goNextState(';', byteNotUsed);
+	decoderObject.goNextState(';', byteNotUsed);
+	decoderObject.goNextState('3', byteNotUsed);
+	decoderObject.goNextState('2', byteNotUsed);
+	decoderObject.goNextState('7', byteNotUsed);
+	decoderObject.goNextState('6', byteNotUsed);
+	decoderObject.goNextState('8', byteNotUsed);
+	decoderObject.goNextState(';', byteNotUsed);
+	decoderObject.goNextState('1', byteNotUsed);
+	decoderObject.goNextState('0', byteNotUsed);
+	decoderObject.goNextState('0', byteNotUsed);
+	decoderObject.goNextState('0', byteNotUsed);
+	decoderObject.goNextState('0', byteNotUsed);
+	decoderObject.goNextState('0', byteNotUsed);
+	{
+		auto const		testValue1 = decoderObject.parameterValues[0];
+		auto const		testValue2 = decoderObject.parameterValues[1];
+		auto const		testValue3 = decoderObject.parameterValues[2];
+		auto const		testValue4 = decoderObject.parameterValues[3];
+		auto const		testValue5 = decoderObject.parameterValues[4];
+		Console_TestAssertUpdate(result, 12345 == testValue1,
+									Console_WriteValue, "overflow test: actual parameter value", testValue1);
+		Console_TestAssertUpdate(result, 32767 == testValue2,
+									Console_WriteValue, "overflow test: actual parameter value", testValue2);
+		Console_TestAssertUpdate(result, kParameterDecoder_ValueUndefined == testValue3,
+									Console_WriteValue, "overflow test: instead of expected undefined, actual parameter value", testValue3);
+		Console_TestAssertUpdate(result, kParameterDecoder_ValueOverflow == testValue4,
+									Console_WriteValue, "overflow test: instead of expected overflow, actual parameter value", testValue4);
+		Console_TestAssertUpdate(result, kParameterDecoder_ValueOverflow == testValue5,
+									Console_WriteValue, "overflow test: instead of expected overflow, actual parameter value", testValue5);
+	}
+	{
+		SInt16		testValue = 0;
+		
+		
+		Console_TestAssertUpdate(result, true == decoderObject.getParameter(0, testValue),
+									Console_WriteValue, "overflow test: parameter should be considered valid, parameter value", testValue);
+		Console_TestAssertUpdate(result, true == decoderObject.getParameter(1, testValue),
+									Console_WriteValue, "overflow test: parameter should be considered valid, parameter value", testValue);
+		Console_TestAssertUpdate(result, false == decoderObject.getParameter(2, testValue),
+									Console_WriteValue, "overflow test: parameter should be considered invalid, parameter value", testValue);
+		Console_TestAssertUpdate(result, true == decoderObject.getParameterOrDefault(2, 123, testValue),
+									Console_WriteValue, "overflow test: parameter should become valid, parameter value", testValue);
+		Console_TestAssertUpdate(result, false == decoderObject.getParameter(3, testValue),
+									Console_WriteValue, "overflow test: parameter should be considered invalid, parameter value", testValue);
+		Console_TestAssertUpdate(result, false == decoderObject.getParameter(4, testValue),
+									Console_WriteValue, "overflow test: parameter should be considered invalid, parameter value", testValue);
+		Console_TestAssertUpdate(result, false == decoderObject.getParameterOrDefault(4, 123, testValue),
+									Console_WriteValue, "overflow test: parameter should be considered invalid, parameter value", testValue);
+	}
+	
+	return result;
+}// unitTest_StateMachine_005
 
 } // anonymous namespace
 

@@ -57,6 +57,14 @@ enum SixelDecoder_ColorType
 	kSixelDecoder_ColorTypeRGB	= 2		//!< red, green, blue components
 };
 
+/*!
+The largest Sixel repetition value that is allowed.
+Note that the decoder first checks for overflow of
+internal storage before considering if a value is
+too large.
+*/
+UInt16 const kSixelDecoder_RepeatCountMaximum = 2048;
+
 #pragma mark Types
 
 /*!
