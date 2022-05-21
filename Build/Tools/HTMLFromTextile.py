@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # vim: set fileencoding=UTF-8 :
 
 """Converts any given Textile input file into HTML.
@@ -21,7 +21,9 @@ except:
     prog = x.tb_frame.f_code.co_filename
     dir = os.path.dirname(prog)
 
-sys.path.append(os.path.join(dir, 'textile-2.1.4'))
+# IMPORTANT: textile must now be installed separately,
+# e.g. using "pip3 install textile" where the module
+# is then found in the default search path of "python3"
 import textile
 
 if __name__ == '__main__':
