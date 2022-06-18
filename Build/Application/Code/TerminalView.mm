@@ -12101,7 +12101,7 @@ menuBarDidEndTracking:(NSNotification*)		aNotification
 	}
 	else
 	{
-		Console_WriteLine("did end menu tracking"); // debug
+		//Console_WriteLine("did end menu tracking"); // debug
 		self.menuEndTrackingTime = CFAbsoluteTimeGetCurrent();
 	}
 }// menuBarDidEndTracking:
@@ -12724,7 +12724,8 @@ mouseEntered:(NSEvent*)		anEvent
 	if (anEvent.trackingArea == self.focusFollowsMouseTrackingArea)
 	{
 		//NSLog(@"focus following mouse into: %@", self); // debug
-		if ((NO == NSApp.keyWindow.isModalPanel) &&
+		if ([self canBecomeKeyView] &&
+			(NO == NSApp.keyWindow.isModalPanel) &&
 			(self.window != NSApp.keyWindow.parentWindow)/* e.g. when a Find panel is open */ &&
 			(self.window != NSApp.keyWindow.parentWindow.parentWindow)/* e.g. “Custom New Session” scenario when remote server popover is also visible */ &&
 			((CFAbsoluteTimeGetCurrent() - self.menuEndTrackingTime) > 1.0/* arbitrary */))
