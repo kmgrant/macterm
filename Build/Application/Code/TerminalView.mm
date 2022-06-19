@@ -637,6 +637,8 @@ The private class interface.
 // new methods
 	- (void)
 	createSubviews;
+	- (BOOL)
+	isUsingInfoBubble;
 
 @end //}
 
@@ -14744,11 +14746,19 @@ See also "viewDidEndLiveResize".
 - (void)
 viewWillStartLiveResize
 {
-	[[TerminalWindow_InfoBubble sharedInfoBubble] reset];
-	[TerminalWindow_InfoBubble sharedInfoBubble].delayBeforeRemoval = 0; // disable auto-remove
-	[TerminalWindow_InfoBubble sharedInfoBubble].stringValue = @"—"; // see "viewFrameDidChange:"
-	[[TerminalWindow_InfoBubble sharedInfoBubble] moveToCenterScreen:self.window.screen];
-	[[TerminalWindow_InfoBubble sharedInfoBubble] display];
+	[super viewWillStartLiveResize];
+	
+	// since the view might be in other types of windows (such
+	// as a preferences pane’s terminal preview), only show
+	// the live resize information for normal terminal windows
+	if ([self isUsingInfoBubble])
+	{
+		[[TerminalWindow_InfoBubble sharedInfoBubble] reset];
+		[TerminalWindow_InfoBubble sharedInfoBubble].delayBeforeRemoval = 0; // disable auto-remove
+		[TerminalWindow_InfoBubble sharedInfoBubble].stringValue = @"—"; // see "viewFrameDidChange:"
+		[[TerminalWindow_InfoBubble sharedInfoBubble] moveToCenterScreen:self.window.screen];
+		[[TerminalWindow_InfoBubble sharedInfoBubble] display];
+	}
 }// viewWillStartLiveResize
 
 
@@ -14761,7 +14771,13 @@ opposite of actions in "viewWillStartLiveResize".
 - (void)
 viewDidEndLiveResize
 {
-	[[TerminalWindow_InfoBubble sharedInfoBubble] removeWithAnimation];
+	[super viewDidEndLiveResize];
+	
+	// (use the same logic here as "viewWillStartLiveResize")
+	if ([self isUsingInfoBubble])
+	{
+		[[TerminalWindow_InfoBubble sharedInfoBubble] removeWithAnimation];
+	}
 }// viewDidEndLiveResize
 
 
@@ -14891,7 +14907,10 @@ viewFrameDidChange:(NSNotification*)	aNotification
 					
 					
 					// note: this bubble is displayed in "viewWillStartLiveResize"
-					[TerminalWindow_InfoBubble sharedInfoBubble].stringValue = BRIDGE_CAST(fontSizeCFString.returnCFStringRef(), NSString*);
+					if ([self isUsingInfoBubble])
+					{
+						[TerminalWindow_InfoBubble sharedInfoBubble].stringValue = BRIDGE_CAST(fontSizeCFString.returnCFStringRef(), NSString*);
+					}
 				}
 			}
 			break;
@@ -14927,7 +14946,10 @@ viewFrameDidChange:(NSNotification*)	aNotification
 						
 						
 						// note: this bubble is displayed in "viewWillStartLiveResize"
-						[TerminalWindow_InfoBubble sharedInfoBubble].stringValue = BRIDGE_CAST(screenDimensionsCFString.returnCFStringRef(), NSString*);
+						if ([self isUsingInfoBubble])
+						{
+							[TerminalWindow_InfoBubble sharedInfoBubble].stringValue = BRIDGE_CAST(screenDimensionsCFString.returnCFStringRef(), NSString*);
+						}
 					}
 				}
 			}
@@ -14992,6 +15014,24 @@ createSubviews
 	_terminalContentView = [[TerminalView_ContentView alloc] initWithFrame:NSZeroRect];
 	[self addSubview:_terminalContentView];
 }// createSubviews
+
+
+/*!
+Returns YES only if the view’s live resizing should
+show/hide and update a small window with details on
+the resize (dimensions or font size).
+
+The info window is only used for ordinary terminal
+windows, and not for instance terminal views that
+are just previews in preference panels.
+
+(2022.06)
+*/
+- (BOOL)
+isUsingInfoBubble
+{
+	return ([self.window isKindOfClass:TerminalWindow_Object.class]);
+}// isUsingInfoBubble
 
 
 @end //} TerminalView_Object (TerminalView_ObjectInternal)
