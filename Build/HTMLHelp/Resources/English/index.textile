@@ -25,7 +25,7 @@ notextile. </dd>
 
 notextile. <dt>Reference</dt><dd>
 
-* "preferences":content/preferences.html
+* "main settings":content/preferences.html
 * "low-level settings":content/advprefs.html
 * "types of windows":content/windows.html
 * "terminal interaction":content/terminals.html

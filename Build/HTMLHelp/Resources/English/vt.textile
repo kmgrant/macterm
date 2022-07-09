@@ -121,7 +121,7 @@ The ANSI-BBS terminal type has many names, and is perhaps best
  extended ASCII as its character set.  PC console applications
  commonly rely on this to do relatively sophisticated graphics
  rendering.  MacTerm has a very good rendering of CP437, but
- to enable it you must set up a Translation preference that
+ to enable it you must set up a Translation setting that
  chooses "Latin-US (DOS)" as its character set.
 
 notextile. </div>

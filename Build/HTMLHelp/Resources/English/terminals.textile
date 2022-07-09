@@ -43,17 +43,17 @@ Text can be imported in the same way - any text dropped into a
  a Paste command.
 
 bq. Multi-line text may trigger an alert if you have not set the
- "Don't warn about multi-line Paste" General preference.  If the
+ "Don't warn about multi-line Paste" General setting.  If the
  text is pasted normally, it will first be modified to respect
  the new-line definition of the session; then, each new line may
- be delayed if a "Line Insertion Delay" Data Flow preference has
- been set for the session.  See "the Preferences page":preferences.html
+ be delayed if a "Line Insertion Delay" Data Flow setting has
+ been set for the session.  See "the settings page":preferences.html
  for more on these settings.
 
-h3(#selectappearance). Text Selection Preferences
+h3(#selectappearance). Text Selection Settings
 
-See "the Preferences page":preferences.html for some options related to the
- appearance and behavior of text selections.  For instance, you
+See "the settings page":preferences.html for some options related to
+ the appearance and behavior of text selections.  For instance, you
  can choose to have them automatically copied to the clipboard.
 
 h2(#termsearch). Terminal Search
@@ -118,9 +118,9 @@ Use Edit >> Find Cursor to create a homing animation that tells
  be useful at times when the cursor is hard to see amongst several
  lines of text.
 
-h3(#cursorappearance). Cursor Preferences
+h3(#cursorappearance). Cursor Settings
 
-See "the Preferences page":preferences.html for some options related to the
+See "the settings page":preferences.html for some options related to the
  appearance and behavior of the cursor.  For instance, you can
  choose its shape and whether or not it is flashing on and off.
 
@@ -156,7 +156,7 @@ table(deftable).
 (def). |<(key). others|(desc)<. standard system editing short-cuts for movement, deletion, selection, etc. are supported; any other text is entered into the field directly|
 
 The font and colors of the command line are read from your
- Default Format preferences when the window is first displayed.
+ Default Format settings when the window is first displayed.
  (If you change these settings later, you must restart MacTerm to
  see the new settings reflected in the Command Line.)
 
@@ -186,9 +186,9 @@ If your mouse has a scroll wheel, you can hold down the Option
  Option and Command keys when using the vertical scroll wheel.
 
 Set the "Window Resize Effect" to "Terminal screen size" in the
- Preferences window if you want ordinary window resizes to
+ MacTerm settings window if you want ordinary window resizes to
  automatically change the screen dimensions.  Note that you can
- temporarily invert this preference (to set the font size instead)
+ temporarily invert this setting (to set the font size instead)
  by holding down the Control key while you resize a window.  And
  when you use "Enter Full Screen" you can hold down the Option key
  to change the resizing behavior of full-screen terminals.
@@ -202,10 +202,10 @@ Use View >> Make Text as Big as Possible to alter a terminal's
 If your mouse has a scroll wheel, you can hold down the Control
  key and use the wheel to increase or decrease the text size.
 
-Set the "Window Resize Effect" to "Text size" in the Preferences
+Set "Window Resize Effect" to "Text size" in the MacTerm settings
  window if you want ordinary window resizes to automatically
  change the font size.  Note that you can temporarily invert this
- preference (to set the terminal screen size instead) by holding
+ setting (to set the terminal screen size instead) by holding
  down the Control key while you resize a window.  And when you
  use "Enter Full Screen" you can hold down the Option key to
  change the resizing behavior of full-screen terminals.
@@ -241,9 +241,9 @@ You can set up automatic responses to certain events in a session
  toolbar item’s menu.
 
 Notifications sent to the system while MacTerm is in the background
- are governed by your notification preference settings in MacTerm
- as well as System Preferences.  For example, you might have set it
- to modify the MacTerm Dock icon.
+ are governed by your notification settings in MacTerm as well as
+ system-wide settings.  For example, you might have set it to modify
+ the MacTerm Dock icon.
 
 If the "Session Info" window is visible when a notification is
  triggered, the session icon will be modified to indicate which
@@ -269,7 +269,7 @@ If the monitored session is not currently receiving any data and
  not the active application, then this will be triggered.
 
 The delay can be customized with the @data-receive-idle-seconds@
- low-level preference setting; see "advanced preferences":advprefs.html#sessions
+ low-level setting; see "the settings page":advprefs.html#sessions
  for details.
 
 h4. Send Keep-Alive on Inactivity
@@ -283,7 +283,7 @@ If the monitored session is not currently receiving any data and
 The exact character that is sent is determined by the Python API.
 
 The delay can be customized with the @data-receive-idle-seconds@
- low-level preference setting; see "advanced preferences":advprefs.html#sessions
+ low-level setting; see "the settings page":advprefs.html#sessions
  for details.
 
 notextile. </div>

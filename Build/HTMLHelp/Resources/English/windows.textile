@@ -21,9 +21,9 @@ h2(#tek). Tektronix Vector Graphics
 
 MacTerm can render TEK-formatted data as vector graphics.  Before
  attempting this, make sure your session has a TEK graphics command
- set enabled (see Preferences >> Sessions >> Graphics), and use the
- View >> New TEK Page command just before sending TEK-formatted data
- from your session.  Depending on preferences, requesting a new page
+ set enabled in MacTerm settings (see Sessions >> Graphics), and use
+ View >> New TEK Page just before sending TEK-formatted data from
+ your session.  Depending on settings, requesting a new page
  might erase any existing window instead of opening a new one.
 
 **Important:** While a graphics window is open, keyboard input to the
@@ -48,7 +48,7 @@ h2(#serverbrowser). Server Browser
 
 The Servers panel appears when the "Remote Shell..." button is
  clicked (either in the File >> Custom New Session... sheet, or
- when editing the equivalent panel in the Preferences window).
+ when editing the equivalent panel in the main settings window).
  Changes to the panel will automatically write an appropriate
  command line, in the window whose button was most recently used
  to activate the panel.
@@ -116,7 +116,7 @@ Hovering the mouse over the Status column can show a few
 
 * **Running (just opened):** It has only been a few seconds since the window opened, so you can close it without warning.
 * **Running:** The session has been open for awhile; MacTerm will confirm when you try to close it.
-* **Not Running:** The application running in the window has quit, but the window is still open; only possible when you have set the "Don't automatically close windows" preference.
+* **Not Running:** The application running in the window has quit, but the window is still open; only possible when you have set the "Don't automatically close windows" setting.
 
 An icon is also displayed, and normally matches the text above;
  but, it can sometimes change to show a transient state:
@@ -129,7 +129,7 @@ You can rearrange the columns in this window and your preferred
 
 Note that View >> Hide Toolbar and View >> Customize Toolbar also
  work for the Session Info window, and can be used to change your
- display preferences for the top of that window.
+ display settings for the top of that window.
 
 h2(#commandline). Command Line
 
@@ -146,7 +146,7 @@ Using Window >> Network Addresses of This Mac or the equivalent command
 Each item in the list can be dragged with the mouse and dropped
  (into a terminal window, for instance), to type in that address.
 
-See also the Macros pane in the Preferences window, which can be
+See also the Macros pane in the main settings window, which can be
  used to define macros with text substitution that employ the
  @\i@ or @\I@ address expansion sequences.
 

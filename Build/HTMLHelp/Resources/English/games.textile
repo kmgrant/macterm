@@ -30,11 +30,11 @@ h2. Configuration
 
 h3. Translation
 
-First, you must create a Translation collection (via Preferences)
- that uses the same characters as DOS typically does, such as
- special graphics.
+First, you must create a Translation collection (via MacTerm
+ settings) that uses the same characters as DOS typically does,
+ such as special graphics.
 
-* Open the Preferences window, and go to the Translations pane.
+* Open the MacTerm settings window, and go to the Translations pane.
 * Either edit the default, or (recommended) use the "+" button in the drawer to create a new collection.
 * Select "Latin-US (DOS)" from the "Characters:" list.
 
@@ -48,7 +48,7 @@ If you acquired a translation unit in some other way, it may have
 h3. Format
 
 While you do not have to change fonts or colors (configured in
- Format preferences), you should be aware of some side effects.
+ Format settings), you should be aware of some side effects.
 
 One, there is currently a bug in MacTerm where any font that is
  not natively encoded as Mac Roman, may incorrectly display some
@@ -76,7 +76,7 @@ Four, MacTerm supports up to 256 colors, but programs that may use
 
 h3. Terminal
 
-You should have a Terminal set up in Preferences with a "Base
+You should have a Terminal set up in MacTerm settings with a "Base
  Emulator:" set to VT100.
 
 MacTerm automatically recognizes certain ANSI-specific add-ons
@@ -91,7 +91,7 @@ Your game could be hosted anywhere, though it is typically on a
  remote server with a certain host name and port number.
 
 If you will play this game often, you should create a new Session
- collection in Preferences.  Otherwise, you could enter the same
+ collection in MacTerm settings.  Otherwise, you could enter the same
  configuration information in the "Custom New Session" sheet.
 
 When the Sessions pane (or sheet) is visible, you will see a
@@ -112,7 +112,7 @@ h2. Game Play
 
 Some MacTerm features are particularly well suited to games.
 
-The "No window close on process exit" preference prevents windows
+The "No window close on process exit" setting prevents windows
  from immediately closing at disconnect time.  Many game servers
  display information during logout that would otherwise disappear
  immediately.
@@ -128,7 +128,7 @@ The "Command Line" window can be displayed using the Window menu.
  you press Return (or Enter).  It also maintains a history of the
  commands entered from that window.
 
-The Macros pane in the Preferences window can be used to create
+The Macros pane in the MacTerm settings window can be used to create
  sets of predefined actions mapped to keys (that can then be
  enabled using the Map menu).
 

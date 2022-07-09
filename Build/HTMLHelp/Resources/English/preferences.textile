@@ -5,20 +5,20 @@ notextile. <div class="navigation"><a id="dummyanchor"></a>
 
 notextile. </div>
 
-h1(pagetitle). Preferences
+h1(pagetitle). Settings
 
 notextile. <div class="content">
 
-notextile. <a id="helpwithpreferences"></a><!-- must use this exact tag; see ExactMatch.kv -->
+notextile. <a id="helpwithpreferences"></a><!-- must use this exact tag; see ExactMatch.kv --><a id="helpwithsettings"></a><!-- must use this exact tag; see ExactMatch.kv -->
 
 p(#abstract). This page is arranged in the same categories as those in
- the MacTerm Preferences window.  To access any of the settings
- mentioned here, start by choosing the "Preferences..." item in
- the MacTerm menu.  See also the "low-level settings":advprefs.html page.
+ the MacTerm settings panels.  To access any of the settings mentioned here,
+ choose the "Preferences..." item ("Settings..." on macOS 13 or later)
+ in the MacTerm menu.  See also the "low-level settings":advprefs.html page.
 
-* "About Grouped Preferences":#collections
-* "About Inherited Preferences":#inheritance
-* "About Preferences Search":#search
+* "About Grouped Settings":#collections
+* "About Inherited Settings":#inheritance
+* "About Settings Search":#search
 * "General":#general
 * "Macros":#macros
 * "Workspaces":#workspaces
@@ -27,11 +27,11 @@ p(#abstract). This page is arranged in the same categories as those in
 * "Formats":#formats
 * "Translations":#translations
 
-h2(#collections). About Grouped Preferences
+h2(#collections). About Grouped Settings
 
 When you select the Macros, Workspaces, Sessions, Terminals,
  Formats or Translations categories, a special list of collections
- appears.  This means you may create *groups of preferences*.  The
+ appears.  This means you may create *groups of settings*.  The
  list is unique for every category.
 
 The order of collections can be changed by dragging items in the
@@ -77,7 +77,7 @@ Use this to create a new collection based on settings that were
 
 The type of collection created, such as a Session or Format, is
  determined by examining the kinds of settings in the imported
- file.  Therefore, no matter which Preferences panel is showing,
+ file.  Therefore, no matter which settings panel is showing,
  the imported file will appear in the appropriate category.
 
 Currently you may import any previously-exported ".plist" file
@@ -126,11 +126,11 @@ Backing up your Default settings beforehand is recommended.  You
 
 One typical application of this command is to copy another color
  scheme in place of your Default.  Although, this can be used in
- any preference category that has collections.
+ any settings category that has collections.
 
 h4. Duplicate Collection
 
-Makes a copy of the selected collection of preferences and
+Makes a copy of the selected collection of settings and
  also creates a field for renaming the new collection.  Note
  that only defined settings are copied; anything that was being
  inherited by the original (from Default) continues to be
@@ -168,9 +168,9 @@ Exported settings are a good way to share among users of MacTerm.
  Default as needed, creating a complete snapshot of what you
  started from).
 
-h2(#inheritance). About Inherited Preferences
+h2(#inheritance). About Inherited Settings
 
-In collection-based preference panels, a "Use Default" column of
+In collection-based settings panels, a "Use Default" column of
  checkboxes is available to control which settings are inherited
  from the corresponding Default.
 
@@ -194,9 +194,9 @@ To remove a local variation and restore inheritance from Default,
  side-by-side horizontally, there will be multiple checkboxes on
  that line to select which one to make Default.)
 
-h2(#search). About Preferences Search
+h2(#search). About Settings Search
 
-The Preferences window has a search field that can help you find
+The settings window has a search field that can help you find
  certain settings.
 
 To search, enter key words in the field and press Return.  If
@@ -239,14 +239,14 @@ Prevents a new session from being created at startup, or when the
  application is activated and no windows are open.
 
 Note that the type of session created will implicitly match the
- "Command-N Key Equivalent" preference.
+ "Command-N Key Equivalent" setting.
 
 h5(#fadebkgnd). Fade in background
 
 Causes terminal windows to become translucent when MacTerm is not
  the active application.
 
-Low-level preferences can be used to further customize this mode.
+Low-level settings can be used to further customize this mode.
 
 h4. Text
 
@@ -353,7 +353,7 @@ When window resizes affect text size, MacTerm dynamically
  the current window size.
 
 You can hold down the Control key prior to starting a window resize
- to temporarily switch this preference for that resize only.  The
+ to temporarily switch this setting for that resize only.  The
  Option key can be held down to have the same effect when you use
  the "Enter Full Screen" command.
 
@@ -422,7 +422,7 @@ When a terminal audio event occurs, you can have MacTerm ignore
  it, or play the standard system beep, or any other library sound.
 
 The set of sounds in the menu is defined the first time the
- Preferences window opens, based on the contents of any Sounds
+ settings window opens, based on the contents of any Sounds
  folders found in /System/Library, /Library, or the Library folder
  of your Home folder.
 
@@ -456,11 +456,11 @@ For "Background notification on bell", as well as any other alert
 
 h2(#macros). Macros
 
-bq. You can create more than one set of preferences in
+bq. You can create more than one set of settings in
  this category.  When you select the icon, a sidebar
  appears with all the collections you have.  Simply
  choose a name from the list in the sidebar, and then
- edit that collection's settings in the main Preferences
+ edit that collection's settings in the main settings
  window.
 
 bq. Each set in this category has an additional list
@@ -686,15 +686,15 @@ fn4. If you use the @\.@ or @\:@ sequences in a macro that has a name,
 
 h2(#workspaces). Workspaces
 
-bq. You can create more than one set of preferences in
+bq. You can create more than one set of settings in
  this category.  When you select the icon, a sidebar
  appears with all the collections you have.  Simply
  choose a name from the list in the sidebar, and then
- edit that collection's settings in the main Preferences
+ edit that collection's settings in the main settings
  window.
 
-bq. Preferences in this category allow inheritance;
- see "About Inherited Preferences" for details.
+bq. Settings in this category allow inheritance;
+ see "About Inherited Settings" for details.
 
 Workspaces manage multiple terminal windows on one or more
  displays.  In addition, the Default is used at startup time to
@@ -772,15 +772,15 @@ See also the "Window Stacking Origin", which applies to any new
 
 h2(#sessions). Sessions
 
-bq. You can create more than one set of preferences in
+bq. You can create more than one set of settings in
  this category.  When you select the icon, a sidebar
  appears with all the collections you have.  Simply
  choose a name from the list in the sidebar, and then
- edit that collection's settings in the main Preferences
+ edit that collection's settings in the main settings
  window.
 
-bq. Preferences in this category allow inheritance;
- see "About Inherited Preferences" for details.
+bq. Settings in this category allow inheritance;
+ see "About Inherited Settings" for details.
 
 Sessions are a little like Bookmarks from your web browser.
 
@@ -791,7 +791,7 @@ These collections specify how to access a resource (typically a
 
 Note that MacTerm can also save session details to files with
  File >> Save As, though the files do not contain as many details
- as Preferences do.
+ as main settings do.
 
 h3(#sessionresource). Resource
 
@@ -833,7 +833,7 @@ Specifies the Terminals collection that will be used to set up
  the emulator for the session terminal window.  Most of the
  terminal settings can be changed while the session is running, by
  using the Terminal menu; and the set can be modified using the
- Preferences window.
+ settings window.
 
 In Unix sessions, you typically will set a "TERM" environment
  variable that is consistent with the Terminal setting.
@@ -844,7 +844,7 @@ Specifies the Formats collection(s) that will be used to set up
  the fonts and colors for the session terminal window.  You can
  change font and color settings while the session is running, by
  using the View menu; and the set can be modified using the
- Preferences window.
+ settings window.
 
 h4. Translation
 
@@ -853,7 +853,7 @@ Specifies the Translations collection that will be used to
  order to display the right accents on letters for words in a
  particular language.  This can be changed while the session is
  running, by using the Map menu, and the set can be modified
- using the Preferences window.
+ using the settings window.
 
 In Unix sessions, you typically will set a "LANG" environment
  variable that is consistent with the Translation setting.
@@ -1066,15 +1066,15 @@ When a new vector graphics image is created (known in TEK as a
 
 h2(#terminals). Terminals
 
-bq. You can create more than one set of preferences in
+bq. You can create more than one set of settings in
  this category.  When you select the icon, a sidebar
  appears with all the collections you have.  Simply
  choose a name from the list in the sidebar, and then
- edit that collection's settings in the main Preferences
+ edit that collection's settings in the main settings
  window.
 
-bq. Preferences in this category allow inheritance;
- see "About Inherited Preferences" for details.
+bq. Settings in this category allow inheritance;
+ see "About Inherited Settings" for details.
 
 Terminals decide somewhat technical aspects of a window, such as
  the emulation type.  Usually, you set up one or more of these
@@ -1125,8 +1125,8 @@ This device has additional capabilities like special keyboard
 
 Note that in the Window menu there are commands to show VT220
  floating key palettes.  You may also find it useful to set up
- Macros via Preferences for key sequences of your own; more
- guidance on this is available in the "Macros section":#macros.
+ Macros for key sequences of your own; more guidance on this is
+ available in the "Macros section":#macros.
 
 h5. XTerm
 
@@ -1236,7 +1236,7 @@ h6. 256 Colors
 
 Enables all 256 new XTerm colors, which includes 16 "standard
  colors" that can be customized in MacTerm's Formats
- preferences.  This allows an application to give text a specific
+ settings.  This allows an application to give text a specific
  foreground and background color, instead of relying on terminal
  defaults.
 
@@ -1260,7 +1260,7 @@ h6. Color
 
 Enables *only* the 16 basic colors commonly called "ANSI colors"
  or Standard Colors which can be customized in MacTerm's Formats
- preferences.  This allows an application to give text a specific
+ settings.  This allows an application to give text a specific
  foreground and background color, instead of relying on terminal
  defaults.
 
@@ -1294,7 +1294,7 @@ Screen settings determine how much text can be stored, how much
  is visible, and how quickly it can be augmented.
 
 **Note:** These settings are under evaluation and may move to
- other preferences categories in the future.
+ other settings categories in the future.
 
 h4. Width
 
@@ -1405,23 +1405,23 @@ Prevents the home, end, page up and page down keys from sending
 
 h2(#formats). Formats
 
-bq. You can create more than one set of preferences in
+bq. You can create more than one set of settings in
  this category.  When you select the icon, a sidebar
  appears with all the collections you have.  Simply
  choose a name from the list in the sidebar, and then
- edit that collection's settings in the main Preferences
+ edit that collection's settings in the main settings
  window.
 
-bq. Preferences in this category allow inheritance;
- see "About Inherited Preferences" for details.
+bq. Settings in this category allow inheritance;
+ see "About Inherited Settings" for details.
 
 notextile. <a id="helpwithscreenformatting"></a><!-- must use this exact tag; see ExactMatch.kv -->
 
 Formats are collections of fonts, font sizes, colors, and more,
  that decide how your terminal windows look.  You can use the View
  menu to change a window's format to one of the collections you
- specify in Preferences, or to make customizations local to the
- frontmost window.
+ specify in the main settings, or to make customizations local to
+ the frontmost window.
 
 h3. General
 
@@ -1471,15 +1471,15 @@ Not all applications in terminals will make use of these colors.
 
 h2(#translations). Translations
 
-bq. You can create more than one set of preferences in
+bq. You can create more than one set of settings in
  this category.  When you select the icon, a sidebar
  appears with all the collections you have.  Simply
  choose a name from the list in the sidebar, and then
- edit that collection's settings in the main Preferences
+ edit that collection's settings in the main settings
  window.
 
-bq. Preferences in this category allow inheritance;
- see "About Inherited Preferences" for details.
+bq. Settings in this category allow inheritance;
+ see "About Inherited Settings" for details.
 
 A translation table essentially allows the terminal to display
  text the way it is supposed to, according to what an application
@@ -1502,7 +1502,7 @@ h5. Use a backup font
 
 Unfortunately, not all fonts are the same: some of them cannot
  render all possible characters.  A "backup font" allows you to
- *prefer* current Format preferences for most text (perhaps
+ *prefer* current Format settings for most text (perhaps
  because those fonts look nicer in general) but use the backup
  to handle special characters.  A Unicode font is recommended as
  a backup font.

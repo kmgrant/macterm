@@ -18,17 +18,17 @@ Select File >> Custom New Session... to begin.
 bq. Only your first sessions should require this
  customization step.  In the future, it will be faster
  to rely on a Favorite or a saved session file to hold
- your preferences.  A Favorite can be opened directly
+ your settings.  A Favorite can be opened directly
  from the File menu; for others, use File >> Open.
 
 A Custom New Session opens a terminal window and a sheet to allow
  configuration.
 
-This sheet is identical to the equivalent panel of the Preferences
- window, so just review the "preferences documentation":preferences.html#sessionresource for more.
+This sheet is identical to the equivalent panel of the MacTerm settings
+ window, so just review the "settings documentation":preferences.html#sessionresource for more.
 
-Unlike Preferences, changes to the sheet are temporary and can
- be either discarded or committed using the sheet's buttons.
+Unlike global settings, changes to the sheet are temporary and
+ can be either discarded or committed using the sheet's buttons.
 
 h2(#unix). Local Sessions: Running Unix Commands
 
@@ -39,7 +39,7 @@ You have a few options for new commands:
 
 * File >> Shell opens your default Unix shell, where you can type commands interactively.
 
-* File >> Default (or the name of any other Favorite from your Session Preferences) in the "New Session:" section of the File menu, will open that session.
+* File >> Default (or the name of any other collection of Session settings) in the "New Session:" section of the File menu, will open that session.
 
 * File >> Custom New Session... can also be used; simply ignore the "Remote Shell..." button, and enter command line text.
 
@@ -50,13 +50,13 @@ bq. Most session creation commands are also available
 
 h2(#workspaces). Workspaces: Starting Several Sessions
 
-Using Preferences, you can define Workspaces, which specify a set
- of sessions that should all start at the same time, in a certain
- window arrangement.
+Using MacTerm settings, you can define Workspaces, which specify a
+ set of sessions that should all start at the same time, in a
+ certain window arrangement.
 
 Once a workspace is defined, go to the "New From Workspace:"
  section of the File menu, and use File >> Default (or the name of
- any other Favorite from your Workspace Preferences), to create
+ any other collection of Workspace settings), to create
  the sessions of a workspace.
 
 h2(#dupwin). Replicating Windows
@@ -70,7 +70,7 @@ Currently, only the command is duplicated; other window settings
 
 h2(#restart). Restarting Commands
 
-If the "No window close on process exit" preference is set, a
+If the "No window close on process exit" setting is set, a
  session window will remain open when it quits by itself (that is,
  if it was not explicitly terminated using File >> Close or your
  mouse).  When the window is in this dead state, the special

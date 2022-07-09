@@ -166,6 +166,8 @@ changes to an interface declared in a ".mm" file.
 	sourceListHidden;
 	@property (strong) IBOutlet NSSplitView*
 	splitView;
+	@property (strong) NSString*
+	windowName; // binding
 
 // actions
 	- (IBAction)

@@ -438,7 +438,7 @@ public struct UIPrefsMacroEditor_View : View {
 					}
 				}
 				UICommon_OptionLineView() {
-					Text("Not all key combinations will be available to macros (for example, if you have short-cuts defined in System Preferences).")
+					Text("Not all key combinations will be available to macros (for example, if you have short-cuts defined in system-wide settings).")
 						.controlSize(.small)
 						.fixedSize(horizontal: false, vertical: true)
 						.lineLimit(3)

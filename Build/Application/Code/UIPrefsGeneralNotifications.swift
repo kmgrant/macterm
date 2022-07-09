@@ -52,7 +52,7 @@ public class UIPrefsGeneralNotifications_BellSoundItemModel : NSObject, Identifi
 	@Published @objc public var soundName: String // sound name or other label
 	@Published public var helpText: String // for help tag in pop-up menu
 	@objc public static let offItemModel = UIPrefsGeneralNotifications_BellSoundItemModel(soundName: "Off", helpText: "When terminal bell occurs, no sound will be played.")
-	@objc public static let defaultItemModel = UIPrefsGeneralNotifications_BellSoundItemModel(soundName: "Default", helpText: "When terminal bell occurs, alert sound will be played (set in System Preferences).")
+	@objc public static let defaultItemModel = UIPrefsGeneralNotifications_BellSoundItemModel(soundName: "Default", helpText: "When terminal bell occurs, alert sound will be played (based on system-wide sound settings).")
 
 	@objc public init(soundName: String, helpText: String? = nil) {
 		self.soundName = soundName
@@ -173,7 +173,7 @@ public struct UIPrefsGeneralNotifications_View : View {
 			}
 			Spacer().asMacTermSectionSpacingV()
 			HStack {
-				Text("Use “System Preferences” to further customize notification behavior.")
+				Text("Use system-wide settings to further customize notification behavior.")
 					.controlSize(.small)
 					.fixedSize(horizontal: false, vertical: true)
 					.lineLimit(3)

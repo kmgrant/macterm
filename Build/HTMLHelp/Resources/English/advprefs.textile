@@ -9,13 +9,13 @@ h1(pagetitle). Low-Level Settings
 
 notextile. <div class="content">
 
-p(#abstract). This page describes preferences that generally require special
+p(#abstract). This page describes settings that generally require special
  edits to make.  For example, you may need to use the command-line
  "defaults" program, or edit XML directly, instead of interacting
  with a window in MacTerm.
 
 * "Overview":#overview
-* "Preference Keys":#keys
+* "Keys":#keys
 ** "General":#general
 ** "Macro Collections":#macros
 ** "Workspace Collections":#workspaces
@@ -26,10 +26,10 @@ p(#abstract). This page describes preferences that generally require special
 
 h2(#overview). Overview
 
-MacTerm preferences are hierarchical.  Every default value is
- in "net.macterm.MacTerm.plist" (in the Preferences folder of
- the user Library folder), even if it appears to be a Default
- collection in the user interface.
+MacTerm settings are hierarchical.  Every default value is
+ in "net.macterm.MacTerm.plist" (in the user Library folder
+ tree), even if it appears to be a Default collection in the
+ user interface.
 
 Collections themselves are separate property list files, of the
  form "net.macterm.MacTerm.[type].[number].plist".  The names
@@ -41,14 +41,14 @@ Each collection file contains either a "name" key of type Data,
  debugging of names.  The Data version is preferred and is an
  external representation of Unicode.  These names determine how
  MacTerm displays the collection in any user interface, such as
- a menu or a list in the Preferences window.
+ a menu or a list in the MacTerm settings window.
 
-MacTerm settings are designed so that *any* preferences key
+MacTerm settings are designed so that *any* settings key
  might one day fit into any collection.  However, currently, only
  related settings are actually expected; for instance, nothing
  will check for colors in a Session collection.
 
-h2(#keys). Preference Keys
+h2(#keys). Keys
 
 h3(#general). General
 
@@ -388,7 +388,7 @@ table(deftable).
 
 h2(#specialvalues). Special Values
 
-Sometimes, several preference keys accept similar values, that
+Sometimes, several settings keys accept similar values, that
  can have a wide range of valid tokens.
 
 A *key name* can describe many keys on the keyboard.  Characters

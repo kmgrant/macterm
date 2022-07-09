@@ -775,6 +775,11 @@ The superview of the master and detail views, with a separator line.
 */
 @synthesize splitView = _splitView;
 
+/*!
+The title of the window, which changes on macOS 13.0+.
+*/
+@synthesize windowName = _windowName;
+
 
 #pragma mark Class Methods
 
@@ -838,6 +843,19 @@ init
 			error = Preferences_StartMonitoring([self->preferenceChangeListener listenerRef], kPreferences_ChangeNumberOfContexts,
 												true/* call immediately to get initial value */);
 			assert(kPreferences_ResultOK == error);
+		}
+		
+		// set the appropriate window title based on system convention
+		// (note: the menu item name will be auto-updated by the OS)
+		if ([NSProcessInfo processInfo].operatingSystemVersion.majorVersion > 12)
+		{
+			// use the new name
+			_windowName = @"Settings: MacTerm";
+		}
+		else
+		{
+			// use the original name
+			_windowName = @"Preferences: MacTerm";
 		}
 	}
 	return self;

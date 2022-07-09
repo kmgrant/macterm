@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="17506" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="20037" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="17506"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="20037"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -47,11 +47,11 @@
                 <binding destination="-2" name="contentArray" keyPath="self.currentPreferenceCollections" id="104"/>
             </connections>
         </arrayController>
-        <window title="Preferences: MacTerm" allowsToolTipsWhenApplicationIsInactive="NO" visibleAtLaunch="NO" animationBehavior="default" tabbingMode="disallowed" toolbarStyle="preference" id="3" userLabel="Cocoa Preferences Window" customClass="PrefsWindow_Object">
+        <window allowsToolTipsWhenApplicationIsInactive="NO" visibleAtLaunch="NO" animationBehavior="default" tabbingMode="disallowed" toolbarStyle="preference" id="3" userLabel="Cocoa Preferences Window" customClass="PrefsWindow_Object">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="250" y="740" width="600" height="350"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="2048" height="1255"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1728" height="1079"/>
             <value key="minSize" type="size" width="600" height="350"/>
             <view key="contentView" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="4" userLabel="Window Content View">
                 <rect key="frame" x="0.0" y="0.0" width="600" height="480"/>
@@ -290,6 +290,9 @@
                     <constraint firstItem="i6l-gZ-ZuL" firstAttribute="top" secondItem="4" secondAttribute="top" id="u35-TD-Tpc"/>
                 </constraints>
             </view>
+            <connections>
+                <binding destination="-2" name="title" keyPath="self.windowName" id="gIq-rr-8bk"/>
+            </connections>
             <point key="canvasLocation" x="22" y="-13"/>
         </window>
     </objects>
