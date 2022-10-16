@@ -29,8 +29,8 @@ ABOUT THE MACTERM PROJECT
   Useful web resources:
     https://www.macterm.net/
     https://github.com/kmgrant/macterm
-    http://www.swig.org/
-    http://www.doxygen.org/
+    https://www.swig.org/
+    https://www.doxygen.nl/
 
 WHAT FILES ARE WHERE, HOW TO BUILD, ETC.
   Please see the file "_Building.txt" for more.

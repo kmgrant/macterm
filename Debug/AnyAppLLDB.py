@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # vim: set fileencoding=UTF-8 :
 
 # Runs the debugger on an internal application that is packaged
@@ -11,10 +11,6 @@
 #
 # Kevin Grant (kmg@mac.com)
 # March 24, 2017
-
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 import os
 import sys

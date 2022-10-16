@@ -11,9 +11,9 @@ PREREQUISITES
   
   MacTerm is implemented as a C++ framework that is loaded into
   Python.  This is accomplished with the Simple Wrapper Interface
-  Generator (SWIG), which you must download and build separately;
-  look at "Build/Tools/SwigConfig.sh".  The latest version of
-  SWIG is recommended (the 3.x series was tested recently).  See
+  Generator (SWIG), which you must download and build separately
+  or install via something like "brew".  The latest version of
+  SWIG is recommended (the 4.x series was tested recently).  See
   "Build/Shared/CustomPaths.xcconfig" for a variable that sets
   the install path (/opt/swig-<version>/bin/swig by default).
   
