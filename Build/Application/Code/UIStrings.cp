@@ -106,7 +106,7 @@ UIStrings_Copy	(UIStrings_AlertWindowCFString	inWhichString,
 		break;
 	
 	case kUIStrings_AlertWindowCopyToDefaultPrimaryText:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Overwrite the Default in this category\nwith “%1$@” settings?\n\nConsider backing up your\nDefault settings first."), CFSTR("Alerts"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Overwrite the Default in this category with “%1$@” settings?\n\nConsider backing up your Default settings first."), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowCopyToDefaultPrimaryText"));
 		break;
 	

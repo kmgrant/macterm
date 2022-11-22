@@ -1293,15 +1293,21 @@ willChangePanelVisibility:(Panel_Visibility)	aVisibility
 										// currently does nothing with this; in addition, older OS
 										// versions do not have the property; to work around this, the
 										// button title is styled manually
+										NSShadow*		shadow = [[NSShadow alloc] init];
+										shadow.shadowColor = [NSColor windowBackgroundColor];
+										shadow.shadowOffset = NSMakeSize(0.0, 0.0); // Cartesian coordinates
+										shadow.shadowBlurRadius = 6.0;
 										NSDictionary*	attributeDictNormal =
 										@{
 											NSForegroundColorAttributeName: [NSColor systemRedColor],
 											NSFontAttributeName: [NSFont boldSystemFontOfSize:0.0],
+											NSShadowAttributeName: shadow, 
 										};
 										NSDictionary*	attributeDictSelected =
 										@{
 											NSForegroundColorAttributeName: [NSColor selectedControlTextColor],
 											NSFontAttributeName: [NSFont boldSystemFontOfSize:0.0],
+											NSShadowAttributeName: shadow, 
 										};
 										aButton.attributedTitle = [[NSAttributedString alloc]
 																	initWithString:aButton.title

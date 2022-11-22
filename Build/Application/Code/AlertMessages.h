@@ -113,49 +113,19 @@ enum Alert_IconID
 #ifdef __OBJC__
 
 /*!
-The base type for Cocoa-based alerts.  This class will not
-be used directly in XIB files, but the names it uses for
-various properties, etc. are still important and must be
-kept in sync with the XIBs that instantiate derived classes.
+Loads a NIB file that defines an alert message.
 
 Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
 @interface AlertMessages_VC : Panel_ViewManager < Panel_Delegate > //{
-{
-@public
-	IBOutlet NSTextField*						titleTextUI;
-	IBOutlet NSTextView*						dialogTextUI;
-	IBOutlet NSTextView*						helpTextUI;
-	IBOutlet AlertMessages_WindowDraggingIcon*	mainIconUI;
-
-@private
-	NSMutableArray*		_registeredObservers;
-	NSSize				idealFrameSize;
-	NSSize				idealIconSize;
-	NSString*			_titleText;
-	NSString*			_dialogText;
-	NSString*			_helpText;
-	NSString*			iconImageName;
-	Alert_IconID		iconID;
-}
-
-// new methods
-	- (void)
-	adjustViews;
-	- (void)
-	setUpFonts;
 
 // accessors
 	@property (strong) NSString*
 	dialogText; // binding
 	@property (strong) NSString*
 	helpText; // binding
-	- (NSString*)
-	iconImageName;
-	- (void)
-	setIconImageName:(NSString*)_;
 	@property (strong) NSString*
 	titleText; // binding
 

@@ -101,39 +101,14 @@ A subclass of NSImageView that allows the user to drag
 the window when it is clicked.  Used to
 */
 @interface AlertMessages_WindowDraggingIcon : NSImageView //{
-{
-	BOOL	_mouseDownCanMoveWindow;
-}
 
 // accessors
+	//! This subclass exists to better support movable alert
+	//! windows.  If this property is set to YES then the
+	//! user can drag the window even if the initial click
+	//! is on the alert icon.
 	@property (assign) BOOL
 	mouseDownCanMoveWindow;
-
-@end //}
-
-
-/*!
-A debugging class that is essentially its superclass but
-the drawing routine has the option to add information.
-*/
-@interface AlertMessages_TextView : NSTextView //{
-
-// NSView
-	- (void)
-	drawRect:(NSRect)_;
-
-@end //}
-
-
-/*!
-A debugging class that is essentially its superclass but
-the drawing routine has the option to add information.
-*/
-@interface AlertMessages_TitleTextField : NSTextField //{
-
-// NSView
-	- (void)
-	drawRect:(NSRect)_;
 
 @end //}
 
@@ -144,10 +119,47 @@ Private properties.
 @interface AlertMessages_VC () //{
 
 // accessors
-	@property (strong) NSMutableArray*
-	registeredObservers;
+	//! The primary text in the alert message.
+	@property (strong) IBOutlet NSTextField*
+	dialogTextUI;
+	//! The secondary (small) text in the alert message.  Hidden if empty.
+	@property (strong) IBOutlet NSTextField*
+	helpTextUI;
+	//! Generic description of icon (as opposed to image name).
+	@property (assign) Alert_IconID
+	iconID;
+	//! The name of the NSImage assigned to the icon view.
+	@property (strong) NSString*
+	iconImageName;
+	//! The frame that fits all the title, dialog and help text exactly.
+	@property (assign) NSSize
+	idealFrameSize;
+	//! The size of the icon, which sets the minimum height of the content.
+	@property (assign) NSSize
+	idealIconSize;
+	//! The icon image view, which can also drag the window when clicked.
+	@property (strong) IBOutlet AlertMessages_WindowDraggingIcon*
+	mainIconUI;
+	//! A large (and usually short) top line for the alert.  Hidden if empty.
+	@property (strong) IBOutlet NSTextField*
+	titleTextUI;
 
 @end //}
+
+
+/*!
+The private class interface.
+*/
+@interface AlertMessages_VC (AlertMessages_VCInternal) //{
+
+// new methods
+	- (NSImage*)
+	imageForIconImageName:(NSString*)_;
+	- (void)
+	setUpFonts;
+
+@end //}
+
 
 #pragma mark Variables
 namespace {
@@ -173,24 +185,6 @@ void					newButtonString						(CFRetainRelease&, UIStrings_ButtonCFString);
 GenericDialog_ItemID	returnGenericItemIDForAlertItem		(UInt16);
 
 } // anonymous namespace
-
-
-/*!
-The private class interface.
-*/
-@interface AlertMessages_VC (AlertMessages_VCInternal) //{
-
-// new methods
-	- (NSImage*)
-	imageForIconImageName:(NSString*)_;
-	- (void)
-	recalculateIdealHeight;
-
-// accessors
-	@property (assign) Alert_IconID
-	iconID;
-
-@end //}
 
 
 
@@ -258,6 +252,7 @@ Alert_NewWindowModal	(NSWindow*		inParentWindow)
 			
 			alertPtr->viewController = [[AlertMessages_VC alloc] init];
 			assert(nil != alertPtr->viewController);
+			
 			alertPtr->genericDialog.setWithNoRetain(GenericDialog_New
 													(inParentWindow.contentView, alertPtr->viewController/* transfer ownership */,
 														nullptr/* data set */, true/* is alert style */));
@@ -1050,104 +1045,14 @@ returnGenericItemIDForAlertItem		(UInt16		inWhichButton)
 
 
 #pragma mark -
-@implementation AlertMessages_TextView //{
-
-
-#pragma mark NSView
-
-
-/*!
-Starts by asking the superclass to draw.  And then, if
-enabled, performs custom drawing on top for debugging.
-
-(2016.04)
-*/
-- (void)
-drawRect:(NSRect)	aRect
-{
-	[super drawRect:aRect];
-	
-#if 0
-	// for debugging; display a red rectangle to show
-	// the area occupied by the view
-	CGContextRef	drawingContext = [[NSGraphicsContext currentContext] CGContext];
-	
-	
-	CGContextSetRGBStrokeColor(drawingContext, 1.0, 0.0, 0.0, 1.0/* alpha */);
-	CGContextSetLineWidth(drawingContext, 2.0);
-	CGContextStrokeRect(drawingContext, NSRectToCGRect(NSInsetRect(self.bounds, 1.0, 1.0)));
-#endif
-}// drawRect:
-
-
-@end //}
-
-
-#pragma mark -
-@implementation AlertMessages_TitleTextField //{
-
-
-#pragma mark NSView
-
-
-/*!
-Starts by asking the superclass to draw.  And then, if
-enabled, performs custom drawing on top for debugging.
-
-(2016.04)
-*/
-- (void)
-drawRect:(NSRect)	aRect
-{
-	[super drawRect:aRect];
-	
-#if 0
-	// for debugging; display a red rectangle to show
-	// the area occupied by the view
-	CGContextRef	drawingContext = [[NSGraphicsContext currentContext] CGContext];
-	
-	
-	CGContextSetRGBStrokeColor(drawingContext, 1.0, 0.0, 0.0, 1.0/* alpha */);
-	CGContextSetLineWidth(drawingContext, 2.0);
-	CGContextStrokeRect(drawingContext, NSRectToCGRect(NSInsetRect(self.bounds, 1.0, 1.0)));
-#endif
-}// drawRect:
-
-
-@end //}
-
-
-#pragma mark -
 @implementation AlertMessages_VC //{
 
 
 #pragma mark Internally-Declared Properties
 
-/*!
-Stores information on key-value observers.
-*/
-@synthesize registeredObservers = _registeredObservers;
 
-
-#pragma mark Externally-Declared Properties
-
-
-/*!
-The primary message of the window, displayed in normal-sized print.
-*/
-@synthesize dialogText = _dialogText;
-
-/*!
-A secondary message (typically help or other information), displayed
-in the smallest print by the window.
-*/
-@synthesize helpText = _helpText;
-
-/*!
-A succinct description of the type of message, displayed in the
-largest print by the window.
-*/
-@synthesize titleText = _titleText;
+@synthesize iconID = _iconID;
+@synthesize iconImageName = _iconImageName;
 
 
 #pragma mark Initializers
@@ -1235,7 +1140,6 @@ Destructor.
 dealloc
 {
 	[self ignoreWhenObjectsPostNotes];
-	[self removeObserversSpecifiedInArray:self.registeredObservers];
 }// dealloc
 
 
@@ -1243,120 +1147,41 @@ dealloc
 
 
 /*!
-Invoke this just before displaying the alert, to finalize the
-positions and sizes of both the subviews and the window itself.
-For example, if there is no title text, the text below it is
-moved up to occupy the same space; and if there is not enough
-room to fit the remaining text, the text and the window are
-expanded.
+Responds to changes in the size of text views by
+updating the ideal frame size of the parent.
 
-NOTE:	This operation is currently not really designed to be
-		performed more than once.  Multiple adjustments after
-		the alert is displayed may not work as intended.
-
-(4.1)
+(2022.11)
 */
 - (void)
-adjustViews
+viewFrameDidChange:(NSNotification*)	aNotification
 {
-	NSRect		aboveFrame;
-	NSRect		nextFrame;
-	CGFloat		spacingAfterTitle = 0;
-	CGFloat		spacingAfterMessage = 0;
-	
-	
-	if (0 == titleTextUI.stringValue.length)
+	if ((aNotification.object == self.dialogTextUI) || (aNotification.object == self.helpTextUI))
 	{
-		// collapse the frame into its top-edge location
-		titleTextUI.frame = NSMakeRect(titleTextUI.frame.origin.x, titleTextUI.frame.origin.y + titleTextUI.frame.size.height,
-										titleTextUI.frame.size.width, 0);
-		titleTextUI.hidden = YES;
-	}
-	else
-	{
-		// save/restore initial width to preserve center alignment
-		// (otherwise "sizeToFit" would anchor and resize on left)
-		CGFloat const	originalWidth = titleTextUI.frame.size.width;
+		CGFloat		idealHeight = 0;
 		
 		
-		titleTextUI.hidden = NO;
-		[titleTextUI sizeToFit];
-		titleTextUI.frame = NSMakeRect(titleTextUI.frame.origin.x,  titleTextUI.frame.origin.y,
-										originalWidth, titleTextUI.frame.size.height);
-		spacingAfterTitle = 16/* arbitrary (see IB) */;
-	}
-	aboveFrame = titleTextUI.frame;
-	
-	if (0 == dialogTextUI.string.length)
-	{
-		// collapse the frame into its top-edge location
-		dialogTextUI.frame = NSMakeRect(dialogTextUI.frame.origin.x, dialogTextUI.frame.origin.y + dialogTextUI.frame.size.height,
-										dialogTextUI.frame.size.width, 0);
-		dialogTextUI.hidden = YES;
-	}
-	else
-	{
-		// save/restore initial width to preserve center alignment
-		// (otherwise "sizeToFit" would anchor and resize on left)
-		CGFloat const	originalWidth = dialogTextUI.frame.size.width;
+		if (NO == self.titleTextUI.hidden)
+		{
+			idealHeight += NSHeight(self.titleTextUI.frame);
+			idealHeight += 10; // should match padding of text stack
+		}
 		
+		if (NO == self.dialogTextUI.hidden)
+		{
+			idealHeight += self.dialogTextUI.frame.size.height;
+		}
 		
-		dialogTextUI.hidden = NO;
-		[dialogTextUI sizeToFit];
-		dialogTextUI.frame = NSMakeRect(dialogTextUI.frame.origin.x,  dialogTextUI.frame.origin.y,
-										originalWidth, dialogTextUI.frame.size.height);
-		[dialogTextUI scrollRangeToVisible:NSMakeRange([dialogTextUI.string length] - 1, 1)];
-		spacingAfterMessage = 20/* arbitrary (see IB) */;
-	}
-	nextFrame = dialogTextUI.frame;
-	nextFrame.origin.y = (aboveFrame.origin.y - spacingAfterTitle - nextFrame.size.height);
-	[dialogTextUI setFrameOrigin:nextFrame.origin];
-	aboveFrame = nextFrame;
-	
-	if (0 == helpTextUI.string.length)
-	{
-		// collapse the frame into its top-edge location
-		helpTextUI.frame = NSMakeRect(helpTextUI.frame.origin.x, helpTextUI.frame.origin.y + helpTextUI.frame.size.height,
-										helpTextUI.frame.size.width, 0);
-		helpTextUI.hidden = YES;
-	}
-	else
-	{
-		// save/restore initial width to preserve center alignment
-		// (otherwise "sizeToFit" would anchor and resize on left)
-		CGFloat const	originalWidth = helpTextUI.frame.size.width;
+		if (NO == self.helpTextUI.hidden)
+		{
+			idealHeight += 10; // should match padding of text stack
+			idealHeight += self.helpTextUI.frame.size.height;
+		}
 		
-		
-		helpTextUI.hidden = NO;
-		[helpTextUI sizeToFit];
-		helpTextUI.frame = NSMakeRect(helpTextUI.frame.origin.x,  helpTextUI.frame.origin.y,
-										originalWidth, helpTextUI.frame.size.height);
-		[helpTextUI scrollRangeToVisible:NSMakeRange([helpTextUI.string length] - 1, 1)];
+		// notify observers (e.g. to resize any parent window)
+		self.idealFrameSize = NSMakeSize(self.idealFrameSize.width, idealHeight);
+		[self postNote:kPanel_IdealSizeDidChangeNotification];
 	}
-	nextFrame = helpTextUI.frame;
-	nextFrame.origin.y = (aboveFrame.origin.y - spacingAfterMessage - nextFrame.size.height);
-	[helpTextUI setFrameOrigin:nextFrame.origin];
-	
-	[self recalculateIdealHeight];
-}// adjustViews
-
-
-/*!
-This should call "setFont:" on the "dialogTextUI", "helpTextUI"
-and "titleTextUI" elements so that they are initialized to
-appropriate typefaces and sizes.  The default implementation
-follows standard alert requirements, but a subclass may wish to
-use smaller fonts, e.g. for modeless notification windows.
-
-(4.1)
-*/
-- (void)
-setUpFonts
-{
-	//[titleTextUI setFont:[NSFont userFontOfSize:20.0/* arbitrary */]];
-	[dialogTextUI setFont:[NSFont boldSystemFontOfSize:[NSFont systemFontSize]]];
-	[helpTextUI setFont:[NSFont systemFontOfSize:[NSFont smallSystemFontSize]]];
-}// setUpFonts
+}// viewFrameDidChange:
 
 
 #pragma mark Accessors
@@ -1374,7 +1199,7 @@ that has no badge.
 - (NSString*)
 iconImageName
 {
-	return [iconImageName copy];
+	return [_iconImageName copy];
 }
 + (BOOL)
 automaticallyNotifiesObserversOfIconImageName
@@ -1384,71 +1209,23 @@ automaticallyNotifiesObserversOfIconImageName
 - (void)
 setIconImageName:(NSString*)	aString
 {
-	if (aString != iconImageName)
+	if (aString != _iconImageName)
 	{
 		[self willChangeValueForKey:@"iconImageName"];
 		
 		if (nil == aString)
 		{
-			iconImageName = @"";
+			_iconImageName = @"";
 		}
 		else
 		{
-			iconImageName = [aString copy];
+			_iconImageName = [aString copy];
 		}
 		
 		[self didChangeValueForKey:@"iconImageName"];
 	}
-	[mainIconUI setImage:[self imageForIconImageName:aString]];
+	[self.mainIconUI setImage:[self imageForIconImageName:aString]];
 }// setIconImageName:
-
-
-#pragma mark NSKeyValueObserving
-
-
-/*!
-Intercepts changes to key values by updating dependent
-states such as frame rectangles or the display.
-
-(4.1)
-*/
-- (void)
-observeValueForKeyPath:(NSString*)	aKeyPath
-ofObject:(id)						anObject
-change:(NSDictionary*)				aChangeDictionary
-context:(void*)						aContext
-{
-	BOOL	handled = NO;
-	
-	
-	if ([self observerArray:self.registeredObservers containsContext:aContext])
-	{
-		handled = YES;
-		
-		if (NSKeyValueChangeSetting == [[aChangeDictionary objectForKey:NSKeyValueChangeKindKey] intValue])
-		{
-			// the "titleTextUI" view can support direct bindings
-			// but NSTextField does not, hence these observers
-			if (KEY_PATH_IS_SEL(aKeyPath, @selector(dialogText)))
-			{
-				dialogTextUI.string = self.dialogText;
-			}
-			else if (KEY_PATH_IS_SEL(aKeyPath, @selector(helpText)))
-			{
-				helpTextUI.string = self.helpText;
-			}
-			else
-			{
-				Console_Warning(Console_WriteValueCFString, "valid observer context is not handling key path", BRIDGE_CAST(aKeyPath, CFStringRef));
-			}
-		}
-	}
-	
-	if (NO == handled)
-	{
-		[super observeValueForKeyPath:aKeyPath ofObject:anObject change:aChangeDictionary context:aContext];
-	}
-}
 
 
 #pragma mark NSWindowNotifications
@@ -1463,8 +1240,8 @@ Responds to window activation by restoring the icon.
 windowDidBecomeKey:(NSNotification*)	aNotification
 {
 #pragma unused(aNotification)
-	mainIconUI.enabled = YES;
-}
+	self.mainIconUI.enabled = YES;
+}// windowDidBecomeKey:
 
 
 /*!
@@ -1476,8 +1253,8 @@ Responds to window deactivation by graying the icon.
 windowDidResignKey:(NSNotification*)	aNotification
 {
 #pragma unused(aNotification)
-	mainIconUI.enabled = NO;
-}
+	self.mainIconUI.enabled = NO;
+}// windowDidResignKey:
 
 
 #pragma mark Panel_Delegate
@@ -1495,19 +1272,14 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 initializeWithContext:(NSObject*)		aContext
 {
 #pragma unused(aViewManager, aContext)
-	self->_registeredObservers = [[NSMutableArray alloc] init];
-	self->_titleText = @"";
-	self->_dialogText = @"";
-	self->_helpText = @"";
-	self->iconID = kAlert_IconIDDefault; // can change later
-	self->iconImageName = NSImageNameCaution; // can change later
+	self.titleText = @"";
+	self.dialogText = @"";
+	self.helpText = @"";
+	self.iconID = kAlert_IconIDDefault; // can change later
+	self.iconImageName = NSImageNameCaution; // can change later
 	
 	// set a default value (can be changed later)
 	self.panelHasContextualHelp = NO;
-	
-	// ensure that the display is updated after certain changes
-	[self.registeredObservers addObject:[self newObserverFromSelector:@selector(dialogText)]];
-	[self.registeredObservers addObject:[self newObserverFromSelector:@selector(helpText)]];
 }// panelViewManager:initializeWithContext:
 
 
@@ -1537,39 +1309,27 @@ didLoadContainerView:(NSView*)			aContainerView
 {
 #pragma unused(aViewManager, aContainerView)
 	assert(nil != self.view);
-	assert(nil != titleTextUI);
-	assert(nil != dialogTextUI);
-	assert(nil != helpTextUI);
-	assert(nil != mainIconUI);
+	assert(nil != self.titleTextUI);
+	assert(nil != self.dialogTextUI);
+	assert(nil != self.helpTextUI);
+	assert(nil != self.mainIconUI);
 	
 	// initialize views
 	[self setUpFonts];
-	[dialogTextUI setAlignment:NSTextAlignmentCenter/*NSTextAlignmentNatural*/];
-	[dialogTextUI setDrawsBackground:NO];
-	[dialogTextUI setEditable:NO];
-	[dialogTextUI setTextColor:[NSColor textColor]];
-	[helpTextUI setAlignment:NSTextAlignmentNatural/*NSTextAlignmentCenter*/];
-	[helpTextUI setDrawsBackground:NO];
-	[helpTextUI setEditable:NO];
-	[helpTextUI setTextColor:[NSColor labelColor]];
-	//[titleTextUI setAlignment:NSTextAlignmentCenter]; // set in IB
-	[titleTextUI setTextColor:[NSColor secondaryLabelColor]];
-	[mainIconUI setImage:[self imageForIconImageName:[self iconImageName]]];
-	mainIconUI.mouseDownCanMoveWindow = YES;
+	self.titleTextUI.textColor = [NSColor secondaryLabelColor];
+	self.mainIconUI.image = [self imageForIconImageName:self.iconImageName];
+	self.mainIconUI.mouseDownCanMoveWindow = YES;
 	
 	// remember the original NIB view size as ideal
-	// (this can be changed by "recalculateIdealHeight")
-	self->idealFrameSize = self.view.frame.size;
-	
-	// TEMPORARY; it is not yet clear why but the size is
-	// being cramped by 20 pixels in alert panels (even
-	// though other uses of Generic Dialog are not); this
-	// can cause text to wrap outside of its calculated
-	// space so it is important that the width be corrected
-	//self->idealFrameSize.width += 20; // TEMPORARY; why is this needed?
+	// (this can be changed by the layout)
+	self.idealFrameSize = self.view.frame.size;
 	
 	// remember the original icon size as a minimum height
-	self->idealIconSize = mainIconUI.frame.size;
+	self.idealIconSize = self.mainIconUI.frame.size;
+	
+	// update ideal size if text views are resized
+	//[self whenObject:self.dialogTextUI postsNote:NSViewFrameDidChangeNotification performSelector:@selector(viewFrameDidChange:)];
+	//[self whenObject:self.helpTextUI postsNote:NSViewFrameDidChangeNotification performSelector:@selector(viewFrameDidChange:)];
 }// panelViewManager:didLoadContainerView:
 
 
@@ -1577,7 +1337,7 @@ didLoadContainerView:(NSView*)			aContainerView
 Specifies a sensible width and height for this panel.
 
 This varies as the alert’s properties are changed (such
-as text; see "recalculateIdealHeight") but size changes
+as text; see auto-layout constraints) but size changes
 are not guaranteed to be used by containing windows
 unless they are made prior to displaying the panel.
 
@@ -1588,7 +1348,7 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 requestingIdealSize:(NSSize*)			outIdealSize
 {
 #pragma unused(aViewManager)
-	*outIdealSize = self->idealFrameSize;
+	*outIdealSize = self.idealFrameSize;
 }// panelViewManager:requestingIdealSize:
 
 
@@ -1622,7 +1382,18 @@ willChangePanelVisibility:(Panel_Visibility)	aVisibility
 #pragma unused(aViewManager)
 	if (kPanel_VisibilityDisplayed == aVisibility)
 	{
-		[self adjustViews];
+		// note: since the parent is now a stack view, hiding
+		// a text view will implicitly consume the spacing
+		// to the neighboring element as well
+		if (0 == self.titleTextUI.stringValue.length)
+		{
+			self.titleTextUI.hidden = YES;
+		}
+		else
+		{
+			self.titleTextUI.hidden = NO;
+			[self.titleTextUI sizeToFit];
+		}
 	}
 }// panelViewManager:willChangePanelVisibility:
 
@@ -1774,14 +1545,14 @@ Accessor.
 - (Alert_IconID)
 iconID
 {
-	return iconID;
+	return _iconID;
 }
 - (void)
 setIconID:(Alert_IconID)	anIconID
 {
-	if (iconID != anIconID)
+	if (_iconID != anIconID)
 	{
-		iconID = anIconID;
+		_iconID = anIconID;
 		
 		// change the displayed icon image
 		switch (anIconID)
@@ -1801,7 +1572,7 @@ setIconID:(Alert_IconID)	anIconID
 			break;
 		}
 	}
-}
+}// setIconID:
 
 
 #pragma mark New Methods
@@ -1859,46 +1630,21 @@ imageForIconImageName:(NSString*)	anImageName
 
 
 /*!
-Adds up the current heights and spacings of key views to
-decide the ideal height of the view and notifies the
-embedded panel of the change.
+This should call "setFont:" on the "dialogTextUI", "helpTextUI"
+and "titleTextUI" elements so that they are initialized to
+appropriate typefaces and sizes.  The default implementation
+follows standard alert requirements, but a subclass may wish to
+use smaller fonts, e.g. for modeless notification windows.
 
 (4.1)
 */
 - (void)
-recalculateIdealHeight
+setUpFonts
 {
-	self->idealFrameSize.height = 0; // initially...
-	
-	self->idealFrameSize.height += self->idealIconSize.height;
-	
-	if (NO == titleTextUI.isHidden)
-	{
-		self->idealFrameSize.height += self->titleTextUI.frame.size.height;
-	}
-	if (NO == dialogTextUI.isHidden)
-	{
-		if (NO == titleTextUI.isHidden)
-		{
-			self->idealFrameSize.height += 10/* padding between */;
-		}
-		self->idealFrameSize.height += self->dialogTextUI.frame.size.height;
-	}
-	if (NO == helpTextUI.isHidden)
-	{
-		if (NO == dialogTextUI.isHidden)
-		{
-			self->idealFrameSize.height += 10/* padding between */;
-		}
-		self->idealFrameSize.height += self->helpTextUI.frame.size.height;
-	}
-	
-	// ensure panel is large enough to fit its top and bottom margins
-	self->idealFrameSize.height += 50;
-	
-	// notify observers (e.g. to resize any parent window)
-	[self postNote:kPanel_IdealSizeDidChangeNotification];
-}// recalculateIdealHeight
+	//self.titleTextUI.font = [NSFont userFontOfSize:20.0/* arbitrary */];
+	self.dialogTextUI.font = [NSFont boldSystemFontOfSize:[NSFont systemFontSize]];
+	self.helpTextUI.font = [NSFont systemFontOfSize:[NSFont smallSystemFontSize]];
+}// setUpFonts
 
 
 @end //} AlertMessages_VC (AlertMessages_VCInternal)
@@ -1908,12 +1654,6 @@ recalculateIdealHeight
 @implementation AlertMessages_WindowDraggingIcon //{
 
 
-/*!
-This subclass exists to better support movable alert
-windows.  If this property is set to YES then the
-user can drag the window even if the initial click
-is on the alert icon.
-*/
 @synthesize mouseDownCanMoveWindow = _mouseDownCanMoveWindow;
 
 

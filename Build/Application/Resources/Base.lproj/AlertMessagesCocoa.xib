@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="17506" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="21507" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="17506"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="21507"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="AlertMessages_VC">
             <connections>
-                <outlet property="dialogTextUI" destination="veC-t9-gpm" id="I1G-7D-u4j"/>
-                <outlet property="helpTextUI" destination="i9s-bA-TTg" id="qa7-OI-ATi"/>
+                <outlet property="dialogTextUI" destination="WYv-et-Fqp" id="4Sg-5B-HGO"/>
+                <outlet property="helpTextUI" destination="t6J-EM-vpY" id="WQZ-mm-De9"/>
                 <outlet property="logicalFirstResponder" destination="Rn1-It-qwq" id="6K4-Sa-I25"/>
                 <outlet property="logicalLastResponder" destination="M44-en-2bl" id="7pS-zt-Uhs"/>
                 <outlet property="mainIconUI" destination="M44-en-2bl" id="z9A-0o-L6K"/>
@@ -18,46 +18,130 @@
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
-        <view id="X1f-Jj-WHQ">
-            <rect key="frame" x="0.0" y="0.0" width="380" height="227"/>
-            <autoresizingMask key="autoresizingMask" widthSizable="YES"/>
+        <view horizontalCompressionResistancePriority="1000" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="X1f-Jj-WHQ">
+            <rect key="frame" x="0.0" y="0.0" width="480" height="121"/>
             <subviews>
-                <imageView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="M44-en-2bl" userLabel="Icon" customClass="AlertMessages_WindowDraggingIcon">
-                    <rect key="frame" x="158" y="153" width="64" height="64"/>
-                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
-                    <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" id="dNy-xR-sxb"/>
-                </imageView>
-                <textField verticalHuggingPriority="750" fixedFrame="YES" alphaValue="0.80000000000000004" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Rn1-It-qwq" userLabel="Title Text" customClass="AlertMessages_TitleTextField">
-                    <rect key="frame" x="30" y="122" width="320" height="23"/>
-                    <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="&lt;title text&gt;" id="cBl-XC-Z58">
-                        <font key="font" metaFont="systemBold" size="16"/>
-                        <color key="textColor" red="0.20000000300000001" green="0.20000000300000001" blue="0.20000000300000001" alpha="1" colorSpace="calibratedRGB"/>
-                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                    </textFieldCell>
-                    <accessibility description="Alert Title"/>
-                    <connections>
-                        <binding destination="-2" name="value" keyPath="self.titleText" id="YVV-hL-Qlb">
-                            <dictionary key="options">
-                                <bool key="NSAllowsEditingMultipleValuesSelection" value="NO"/>
-                                <bool key="NSContinuouslyUpdatesValue" value="YES"/>
-                                <bool key="NSRaisesForNotApplicableKeys" value="NO"/>
-                            </dictionary>
-                        </binding>
-                    </connections>
-                </textField>
-                <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="veC-t9-gpm" userLabel="Dialog Text" customClass="AlertMessages_TextView">
-                    <rect key="frame" x="52" y="86" width="276" height="20"/>
-                    <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                    <accessibility description="Alert Message"/>
-                </customView>
-                <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="i9s-bA-TTg" userLabel="Help Text" customClass="AlertMessages_TextView">
-                    <rect key="frame" x="20" y="48" width="340" height="18"/>
-                    <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                    <accessibility description="Alert Details"/>
-                </customView>
+                <stackView distribution="fill" orientation="vertical" alignment="leading" spacing="0.0" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="SFj-QX-MJO" userLabel="mainStack">
+                    <rect key="frame" x="20" y="20" width="440" height="81"/>
+                    <subviews>
+                        <textField verticalHuggingPriority="750" verticalCompressionResistancePriority="1000" alphaValue="0.80000000000000004" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Rn1-It-qwq" userLabel="Title Text">
+                            <rect key="frame" x="98" y="64" width="81" height="17"/>
+                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="&lt;title text&gt;" id="cBl-XC-Z58">
+                                <font key="font" metaFont="systemBold" size="14"/>
+                                <color key="textColor" red="0.20000000300000001" green="0.20000000300000001" blue="0.20000000300000001" alpha="1" colorSpace="calibratedRGB"/>
+                                <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                            </textFieldCell>
+                            <accessibility description="Alert Title"/>
+                            <connections>
+                                <binding destination="-2" name="value" keyPath="self.titleText" id="YVV-hL-Qlb">
+                                    <dictionary key="options">
+                                        <bool key="NSAllowsEditingMultipleValuesSelection" value="NO"/>
+                                        <bool key="NSContinuouslyUpdatesValue" value="YES"/>
+                                        <bool key="NSRaisesForNotApplicableKeys" value="NO"/>
+                                    </dictionary>
+                                </binding>
+                            </connections>
+                        </textField>
+                        <stackView distribution="equalSpacing" orientation="horizontal" alignment="top" spacing="36" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" horizontalCompressionResistancePriority="1000" verticalCompressionResistancePriority="1000" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="oXi-nm-1aU" userLabel="iconHorizontalStack">
+                            <rect key="frame" x="0.0" y="0.0" width="440" height="64"/>
+                            <subviews>
+                                <imageView translatesAutoresizingMaskIntoConstraints="NO" id="M44-en-2bl" userLabel="Icon" customClass="AlertMessages_WindowDraggingIcon">
+                                    <rect key="frame" x="0.0" y="0.0" width="64" height="64"/>
+                                    <constraints>
+                                        <constraint firstAttribute="width" constant="64" id="5cc-GE-GU0"/>
+                                        <constraint firstAttribute="height" constant="64" id="JaE-IT-Kpt"/>
+                                    </constraints>
+                                    <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" id="dNy-xR-sxb"/>
+                                </imageView>
+                                <stackView distribution="equalSpacing" orientation="vertical" alignment="leading" spacing="16" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="1000" horizontalCompressionResistancePriority="1000" verticalCompressionResistancePriority="1000" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1Ep-H3-tZS" userLabel="textStack">
+                                    <rect key="frame" x="100" y="0.0" width="340" height="50"/>
+                                    <subviews>
+                                        <textField verticalHuggingPriority="749" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="WYv-et-Fqp" userLabel="dialogText">
+                                            <rect key="frame" x="-2" y="32" width="344" height="18"/>
+                                            <textFieldCell key="cell" selectable="YES" title="&lt;dialog text&gt;" id="gJ4-Y1-TCH">
+                                                <font key="font" usesAppearanceFont="YES"/>
+                                                <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                                <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                            </textFieldCell>
+                                            <connections>
+                                                <binding destination="-2" name="value" keyPath="self.dialogText" id="N9h-1R-JT1">
+                                                    <dictionary key="options">
+                                                        <bool key="NSAllowsEditingMultipleValuesSelection" value="NO"/>
+                                                        <bool key="NSContinuouslyUpdatesValue" value="YES"/>
+                                                        <bool key="NSRaisesForNotApplicableKeys" value="NO"/>
+                                                    </dictionary>
+                                                </binding>
+                                            </connections>
+                                        </textField>
+                                        <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="t6J-EM-vpY" userLabel="helpText">
+                                            <rect key="frame" x="-2" y="0.0" width="344" height="16"/>
+                                            <textFieldCell key="cell" selectable="YES" title="&lt;help text&gt;" id="JyQ-gu-i6T">
+                                                <font key="font" metaFont="system"/>
+                                                <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                                <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                            </textFieldCell>
+                                            <connections>
+                                                <binding destination="-2" name="value" keyPath="self.helpText" id="I8r-iY-0AE">
+                                                    <dictionary key="options">
+                                                        <bool key="NSAllowsEditingMultipleValuesSelection" value="NO"/>
+                                                        <bool key="NSContinuouslyUpdatesValue" value="YES"/>
+                                                        <bool key="NSRaisesForNotApplicableKeys" value="NO"/>
+                                                    </dictionary>
+                                                </binding>
+                                            </connections>
+                                        </textField>
+                                    </subviews>
+                                    <constraints>
+                                        <constraint firstItem="t6J-EM-vpY" firstAttribute="leading" secondItem="1Ep-H3-tZS" secondAttribute="leading" id="Hlq-fO-hKr"/>
+                                        <constraint firstAttribute="width" constant="340" id="LNh-gh-0PZ"/>
+                                        <constraint firstItem="WYv-et-Fqp" firstAttribute="leading" secondItem="1Ep-H3-tZS" secondAttribute="leading" id="c7g-B3-67z"/>
+                                        <constraint firstAttribute="trailing" secondItem="WYv-et-Fqp" secondAttribute="trailing" id="dPG-YT-MkM"/>
+                                        <constraint firstAttribute="trailing" secondItem="t6J-EM-vpY" secondAttribute="trailing" id="uS1-s1-vxv"/>
+                                    </constraints>
+                                    <visibilityPriorities>
+                                        <integer value="1000"/>
+                                        <integer value="1000"/>
+                                    </visibilityPriorities>
+                                    <customSpacing>
+                                        <real value="3.4028234663852886e+38"/>
+                                        <real value="3.4028234663852886e+38"/>
+                                    </customSpacing>
+                                </stackView>
+                            </subviews>
+                            <constraints>
+                                <constraint firstItem="1Ep-H3-tZS" firstAttribute="top" secondItem="oXi-nm-1aU" secondAttribute="top" constant="14" id="CEH-f3-2w2"/>
+                                <constraint firstAttribute="bottom" secondItem="1Ep-H3-tZS" secondAttribute="bottom" id="OEv-bh-0d1"/>
+                            </constraints>
+                            <visibilityPriorities>
+                                <integer value="1000"/>
+                                <integer value="1000"/>
+                            </visibilityPriorities>
+                            <customSpacing>
+                                <real value="3.4028234663852886e+38"/>
+                                <real value="3.4028234663852886e+38"/>
+                            </customSpacing>
+                        </stackView>
+                    </subviews>
+                    <constraints>
+                        <constraint firstItem="WYv-et-Fqp" firstAttribute="leading" secondItem="Rn1-It-qwq" secondAttribute="leading" id="8GK-Q2-nYz"/>
+                    </constraints>
+                    <visibilityPriorities>
+                        <integer value="1000"/>
+                        <integer value="1000"/>
+                    </visibilityPriorities>
+                    <customSpacing>
+                        <real value="3.4028234663852886e+38"/>
+                        <real value="3.4028234663852886e+38"/>
+                    </customSpacing>
+                </stackView>
             </subviews>
-            <point key="canvasLocation" x="275" y="345.5"/>
+            <constraints>
+                <constraint firstItem="SFj-QX-MJO" firstAttribute="leading" secondItem="X1f-Jj-WHQ" secondAttribute="leading" constant="20" symbolic="YES" id="AXc-vm-uCj"/>
+                <constraint firstAttribute="trailing" secondItem="SFj-QX-MJO" secondAttribute="trailing" constant="20" symbolic="YES" id="b9w-Mf-Hmj"/>
+                <constraint firstItem="SFj-QX-MJO" firstAttribute="top" secondItem="X1f-Jj-WHQ" secondAttribute="top" constant="20" symbolic="YES" id="iP3-2U-sDn"/>
+                <constraint firstAttribute="bottom" secondItem="SFj-QX-MJO" secondAttribute="bottom" constant="20" symbolic="YES" id="oEe-zb-Bm5"/>
+            </constraints>
+            <point key="canvasLocation" x="346" y="336.5"/>
         </view>
     </objects>
 </document>
