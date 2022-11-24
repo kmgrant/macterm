@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 52;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -1096,6 +1096,7 @@
 /* Begin PBXShellScriptBuildPhase section */
 		0A79B1E70AF71FD90052ECD3 /* Auto-Date Property List */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -1106,7 +1107,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "exec ${SRCROOT}/VersionInfo.sh ${SRCROOT}/Tools/AutoDatePropertyList.sh";
+			shellScript = "exec ${SRCROOT}/VersionInfo.sh ${SRCROOT}/Tools/AutoDatePropertyList.sh\n";
 		};
 		0A79B1EB0AF71FEA0052ECD3 /* Auto-Date Property List */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1140,6 +1141,7 @@
 		};
 		0AFB11AA0AE9EECB005EAF90 /* Hack In Debug Symlinks */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -1150,7 +1152,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\n# referenced environment variables are set by Xcode\n\n# since the linker seems to prefer finding \"Foobar\" instead of \"Foobar_debug\"\n# in a [.framework]/Versions/A/ subdirectory, this hacks in a link to the\n# debug version so that *only* a debug version actually has to be built\n\n#ln -snf ${EXECUTABLE_NAME}_debug \"${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/${EXECUTABLE_NAME}\"\n\n# this gets weirder...the script that sets up library paths for Python ends\n# up using the top-level link [.framework]/Foobar, but in debugging mode *it*\n# looks for \"Foobar_debug\" (the opposite behavior of the other case above);\n# so at the top level, this script also hacks in a link to the non-debug name\n\n#ln -snf Versions/${FRAMEWORK_VERSION}/${EXECUTABLE_NAME} \"${BUILT_PRODUCTS_DIR}/${FULL_PRODUCT_NAME}/${EXECUTABLE_NAME}\"\n#ln -snf ${EXECUTABLE_NAME} \"${BUILT_PRODUCTS_DIR}/${FULL_PRODUCT_NAME}/${EXECUTABLE_NAME}_debug\"";
+			shellScript = "\n# referenced environment variables are set by Xcode\n\n# since the linker seems to prefer finding \"Foobar\" instead of \"Foobar_debug\"\n# in a [.framework]/Versions/A/ subdirectory, this hacks in a link to the\n# debug version so that *only* a debug version actually has to be built\n\n#ln -snf ${EXECUTABLE_NAME}_debug \"${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/${EXECUTABLE_NAME}\"\n\n# this gets weirder...the script that sets up library paths for Python ends\n# up using the top-level link [.framework]/Foobar, but in debugging mode *it*\n# looks for \"Foobar_debug\" (the opposite behavior of the other case above);\n# so at the top level, this script also hacks in a link to the non-debug name\n\n#ln -snf Versions/${FRAMEWORK_VERSION}/${EXECUTABLE_NAME} \"${BUILT_PRODUCTS_DIR}/${FULL_PRODUCT_NAME}/${EXECUTABLE_NAME}\"\n#ln -snf ${EXECUTABLE_NAME} \"${BUILT_PRODUCTS_DIR}/${FULL_PRODUCT_NAME}/${EXECUTABLE_NAME}_debug\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
