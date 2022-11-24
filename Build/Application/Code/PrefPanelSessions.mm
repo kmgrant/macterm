@@ -2368,7 +2368,6 @@ initializeWithContext:(NSObject*)		aContext/* PrefPanelSessions_DataFlowActionHa
 	actionHandler.prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
 	
 	self.actionHandler = actionHandler; // transfer ownership
-	self.idealFrame = CGRectMake(0, 0, 520, 330); // somewhat arbitrary; see SwiftUI code/playground
 	
 	// TEMPORARY; not clear how to extract views from SwiftUI-constructed hierarchy;
 	// for now, assign to itself so it is not "nil"
@@ -2403,7 +2402,7 @@ didLoadContainerView:(NSView*)			aContainerView
 {
 #pragma unused(aViewManager, aContainerView)
 	// remember initial frame (it might be changed later)
-	self.idealFrame = aContainerView.frame;
+	self.idealFrame = CGRectMake(0, 0, 520, 330); // somewhat arbitrary; see SwiftUI code/playground
 }// panelViewManager:didLoadContainerView:
 
 
@@ -3748,7 +3747,6 @@ initializeWithContext:(NSObject*)		aContext/* PrefPanelSessions_KeyboardActionHa
 	actionHandler.prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
 	
 	self.actionHandler = actionHandler; // transfer ownership
-	self.idealFrame = CGRectMake(0, 0, 520, 330); // somewhat arbitrary; see SwiftUI code/playground
 	
 	// TEMPORARY; not clear how to extract views from SwiftUI-constructed hierarchy;
 	// for now, assign to itself so it is not "nil"
@@ -3783,7 +3781,7 @@ didLoadContainerView:(NSView*)			aContainerView
 {
 #pragma unused(aViewManager, aContainerView)
 	// remember initial frame (it might be changed later)
-	self.idealFrame = aContainerView.frame;
+	self.idealFrame = CGRectMake(0, 0, 520, 330); // somewhat arbitrary; see SwiftUI code/playground
 }// panelViewManager:didLoadContainerView:
 
 
@@ -4294,7 +4292,6 @@ initializeWithContext:(NSObject*)		aContext/* PrefPanelSessions_GraphicsActionHa
 	actionHandler.prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
 	
 	self.actionHandler = actionHandler; // transfer ownership
-	self.idealFrame = CGRectMake(0, 0, 460, 200); // somewhat arbitrary; see SwiftUI code/playground
 	
 	// TEMPORARY; not clear how to extract views from SwiftUI-constructed hierarchy;
 	// for now, assign to itself so it is not "nil"
@@ -4329,7 +4326,7 @@ didLoadContainerView:(NSView*)			aContainerView
 {
 #pragma unused(aViewManager, aContainerView)
 	// remember initial frame (it might be changed later)
-	self.idealFrame = aContainerView.frame;
+	self.idealFrame = CGRectMake(0, 0, 460, 200); // somewhat arbitrary; see SwiftUI code/playground
 }// panelViewManager:didLoadContainerView:
 
 

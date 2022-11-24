@@ -108,6 +108,18 @@ done from this implementation file, and used by this internal class.
 
 
 /*!
+Private properties.
+*/
+@interface PrefPanelGeneral_FullScreenVC () //{
+
+// accessors
+	@property (assign) CGRect
+	idealFrame;
+
+@end //}
+
+
+/*!
 Implements SwiftUI interaction for the “Notifications” panel.
 
 This is technically only a separate internal class because the main
@@ -132,6 +144,18 @@ done from this implementation file, and used by this internal class.
 	prefsMgr;
 	@property (strong) UIPrefsGeneralNotifications_Model*
 	viewModel;
+
+@end //}
+
+
+/*!
+Private properties.
+*/
+@interface PrefPanelGeneral_NotificationsVC () //{
+
+// accessors
+	@property (assign) CGRect
+	idealFrame;
 
 @end //}
 
@@ -166,6 +190,18 @@ done from this implementation file, and used by this internal class.
 
 
 /*!
+Private properties.
+*/
+@interface PrefPanelGeneral_OptionsVC () //{
+
+// accessors
+	@property (assign) CGRect
+	idealFrame;
+
+@end //}
+
+
+/*!
 Implements SwiftUI interaction for the “Special” panel.
 
 This is technically only a separate internal class because the main
@@ -190,6 +226,18 @@ done from this implementation file, and used by this internal class.
 	prefsMgr;
 	@property (strong) UIPrefsGeneralSpecial_Model*
 	viewModel;
+
+@end //}
+
+
+/*!
+Private properties.
+*/
+@interface PrefPanelGeneral_SpecialVC () //{
+
+// accessors
+	@property (assign) CGRect
+	idealFrame;
 
 @end //}
 
@@ -675,8 +723,7 @@ initializeWithContext:(NSObject*)		aContext/* PrefPanelGeneral_FullScreenActionH
 	
 	actionHandler.prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
 	
-	_actionHandler = actionHandler; // transfer ownership
-	_idealFrame = CGRectMake(0, 0, 450, 180); // somewhat arbitrary; see SwiftUI code/playground
+	self.actionHandler = actionHandler; // transfer ownership
 	
 	// TEMPORARY; not clear how to extract views from SwiftUI-constructed hierarchy;
 	// for now, assign to itself so it is not "nil"
@@ -716,7 +763,7 @@ didLoadContainerView:(NSView*)			aContainerView
 {
 #pragma unused(aViewManager, aContainerView)
 	// remember initial frame (it might be changed later)
-	_idealFrame = [aContainerView frame];
+	self.idealFrame = CGRectMake(0, 0, 450, 180); // somewhat arbitrary; see SwiftUI code/playground
 }// panelViewManager:didLoadContainerView:
 
 
@@ -730,7 +777,7 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 requestingIdealSize:(NSSize*)			outIdealSize
 {
 #pragma unused(aViewManager)
-	*outIdealSize = _idealFrame.size;
+	*outIdealSize = self.idealFrame.size;
 }
 
 
@@ -1283,8 +1330,7 @@ initializeWithContext:(NSObject*)		aContext/* PrefPanelGeneral_NotificationsActi
 	
 	actionHandler.prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
 	
-	_actionHandler = actionHandler; // transfer ownership
-	_idealFrame = CGRectMake(0, 0, 450, 320); // somewhat arbitrary; see SwiftUI code/playground
+	self.actionHandler = actionHandler; // transfer ownership
 	
 	// TEMPORARY; not clear how to extract views from SwiftUI-constructed hierarchy;
 	// for now, assign to itself so it is not "nil"
@@ -1324,7 +1370,7 @@ didLoadContainerView:(NSView*)			aContainerView
 {
 #pragma unused(aViewManager, aContainerView)
 	// remember initial frame (it might be changed later)
-	_idealFrame = [aContainerView frame];
+	self.idealFrame = CGRectMake(0, 0, 450, 320); // somewhat arbitrary; see SwiftUI code/playground
 }// panelViewManager:didLoadContainerView:
 
 
@@ -1338,7 +1384,7 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 requestingIdealSize:(NSSize*)			outIdealSize
 {
 #pragma unused(aViewManager)
-	*outIdealSize = _idealFrame.size;
+	*outIdealSize = self.idealFrame.size;
 }
 
 
@@ -1958,8 +2004,7 @@ initializeWithContext:(NSObject*)		aContext/* PrefPanelGeneral_OptionsActionHand
 	
 	actionHandler.prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
 	
-	_actionHandler = actionHandler; // transfer ownership
-	_idealFrame = CGRectMake(0, 0, 480, 320); // somewhat arbitrary; see SwiftUI code/playground
+	self.actionHandler = actionHandler; // transfer ownership
 	
 	// TEMPORARY; not clear how to extract views from SwiftUI-constructed hierarchy;
 	// for now, assign to itself so it is not "nil"
@@ -1999,7 +2044,7 @@ didLoadContainerView:(NSView*)			aContainerView
 {
 #pragma unused(aViewManager, aContainerView)
 	// remember initial frame (it might be changed later)
-	_idealFrame = [aContainerView frame];
+	self.idealFrame = CGRectMake(0, 0, 480, 320); // somewhat arbitrary; see SwiftUI code/playground
 }// panelViewManager:didLoadContainerView:
 
 
@@ -2013,7 +2058,7 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 requestingIdealSize:(NSSize*)			outIdealSize
 {
 #pragma unused(aViewManager)
-	*outIdealSize = _idealFrame.size;
+	*outIdealSize = self.idealFrame.size;
 }
 
 
@@ -2570,8 +2615,7 @@ initializeWithContext:(NSObject*)		aContext/* PrefPanelGeneral_SpecialActionHand
 	
 	actionHandler.prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
 	
-	_actionHandler = actionHandler; // transfer ownership
-	_idealFrame = CGRectMake(0, 0, 600, 350); // somewhat arbitrary; see SwiftUI code/playground
+	self.actionHandler = actionHandler; // transfer ownership
 	
 	// TEMPORARY; not clear how to extract views from SwiftUI-constructed hierarchy;
 	// for now, assign to itself so it is not "nil"
@@ -2611,7 +2655,7 @@ didLoadContainerView:(NSView*)			aContainerView
 {
 #pragma unused(aViewManager, aContainerView)
 	// remember initial frame (it might be changed later)
-	_idealFrame = [aContainerView frame];
+	self.idealFrame = CGRectMake(0, 0, 600, 350); // somewhat arbitrary; see SwiftUI code/playground
 }// panelViewManager:didLoadContainerView:
 
 
@@ -2625,7 +2669,7 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 requestingIdealSize:(NSSize*)			outIdealSize
 {
 #pragma unused(aViewManager)
-	*outIdealSize = _idealFrame.size;
+	*outIdealSize = self.idealFrame.size;
 }
 
 

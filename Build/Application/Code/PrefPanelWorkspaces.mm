@@ -105,6 +105,18 @@ done from this implementation file, and used by this internal class.
 
 
 /*!
+Private properties.
+*/
+@interface PrefPanelWorkspaces_OptionsVC () //{
+
+// accessors
+	@property (assign) CGRect
+	idealFrame;
+
+@end //}
+
+
+/*!
 The private class interface.
 */
 @interface PrefPanelWorkspaces_WindowSessionValue (PrefPanelWorkspaces_WindowSessionValueInternal) //{
@@ -513,8 +525,7 @@ initializeWithContext:(NSObject*)		aContext/* PrefPanelWorkspaces_OptionsActionH
 	
 	actionHandler.prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
 	
-	_actionHandler = actionHandler; // transfer ownership
-	_idealFrame = CGRectMake(0, 0, 460, 200); // somewhat arbitrary; see SwiftUI code/playground
+	self.actionHandler = actionHandler; // transfer ownership
 	
 	// TEMPORARY; not clear how to extract views from SwiftUI-constructed hierarchy;
 	// for now, assign to itself so it is not "nil"
@@ -549,7 +560,7 @@ didLoadContainerView:(NSView*)			aContainerView
 {
 #pragma unused(aViewManager, aContainerView)
 	// remember initial frame (it might be changed later)
-	_idealFrame = [aContainerView frame];
+	self.idealFrame = CGRectMake(0, 0, 460, 200); // somewhat arbitrary; see SwiftUI code/playground
 }// panelViewManager:didLoadContainerView:
 
 
@@ -563,7 +574,7 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 requestingIdealSize:(NSSize*)			outIdealSize
 {
 #pragma unused(aViewManager)
-	*outIdealSize = _idealFrame.size;
+	*outIdealSize = self.idealFrame.size;
 }
 
 

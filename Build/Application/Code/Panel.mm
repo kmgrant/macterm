@@ -132,7 +132,7 @@ context:(NSObject*)					aContext
 	if (nil != self)
 	{
 		_delegate = aDelegate;
-		_isPanelUserInterfaceLoaded = NO;
+		_isPanelUserInterfaceLoaded = NO; // set again below after delegate is called
 		_panelDisplayAction = nil;
 		_panelDisplayTarget = nil;
 		_panelParent = nil;
@@ -151,6 +151,13 @@ context:(NSObject*)					aContext
 		// (subclasses may need to initialize certain data in themselves
 		// to ensure that their bindings actually succeed)
 		[self.delegate panelViewManager:self initializeWithContext:aContext];
+		assert(nil != self.logicalFirstResponder);
+		assert(nil != self.logicalLastResponder);
+		
+		// NSViewController does not “load” the view when it is merely
+		// assigned to the property; trigger the delegate chain here
+		_isPanelUserInterfaceLoaded = YES;
+		[self.delegate panelViewManager:self didLoadContainerView:self.view];
 	}
 	return self;
 }// initWithView:delegate:context
@@ -425,8 +432,10 @@ loadView
 	assert(nil != self.logicalFirstResponder);
 	assert(nil != self.logicalLastResponder);
 	
+	// IMPORTANT: similar steps should be performed to inform
+	// the delegate in "initWithView:delegate:context:"
+	// (which does not load the view from a NIB)
 	self.isPanelUserInterfaceLoaded = YES;
-	
 	[self.delegate panelViewManager:self didLoadContainerView:self.view];
 }// loadView
 

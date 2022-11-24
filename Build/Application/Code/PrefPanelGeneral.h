@@ -69,11 +69,6 @@ Implements the “Full Screen” panel.
 */
 @interface PrefPanelGeneral_FullScreenVC : Panel_ViewManager< Panel_Delegate,
 																PrefsWindow_PanelInterface > //{
-{
-@private
-	NSRect										_idealFrame;
-	PrefPanelGeneral_FullScreenActionHandler*	_actionHandler;
-}
 
 // accessors
 	@property (strong) PrefPanelGeneral_FullScreenActionHandler*
@@ -90,11 +85,6 @@ Implements the “Notifications” panel.
 */
 @interface PrefPanelGeneral_NotificationsVC : Panel_ViewManager< Panel_Delegate,
 																	PrefsWindow_PanelInterface > //{
-{
-@private
-	NSRect											_idealFrame;
-	PrefPanelGeneral_NotificationsActionHandler*	_actionHandler;
-}
 
 // accessors
 	@property (strong) PrefPanelGeneral_NotificationsActionHandler*
@@ -111,11 +101,6 @@ Implements the “general options” panel.
 */
 @interface PrefPanelGeneral_OptionsVC : Panel_ViewManager< Panel_Delegate,
 															PrefsWindow_PanelInterface > //{
-{
-@private
-	NSRect									_idealFrame;
-	PrefPanelGeneral_OptionsActionHandler*	_actionHandler;
-}
 
 // accessors
 	@property (strong) PrefPanelGeneral_OptionsActionHandler*
@@ -132,11 +117,6 @@ Implements the “Special” panel.
 */
 @interface PrefPanelGeneral_SpecialVC : Panel_ViewManager< Panel_Delegate,
 															PrefsWindow_PanelInterface > //{
-{
-@private
-	NSRect									_idealFrame;
-	PrefPanelGeneral_SpecialActionHandler*	_actionHandler;
-}
 
 // accessors
 	@property (strong) PrefPanelGeneral_SpecialActionHandler*

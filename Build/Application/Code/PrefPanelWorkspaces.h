@@ -76,11 +76,6 @@ Implements the “workspace options” panel.
 */
 @interface PrefPanelWorkspaces_OptionsVC : Panel_ViewManager< Panel_Delegate,
 																PrefsWindow_PanelInterface > //{
-{
-@private
-	NSRect										_idealFrame;
-	PrefPanelWorkspaces_OptionsActionHandler*	_actionHandler;
-}
 
 // accessors
 	@property (strong) PrefPanelWorkspaces_OptionsActionHandler*

@@ -1597,7 +1597,7 @@ didLoadContainerView:(NSView*)			aContainerView
 {
 #pragma unused(aViewManager)
 	// remember initial frame (it might be changed later)
-	_idealFrame = [aContainerView frame];
+	self.idealFrame = [aContainerView frame];
 	
 	// since this is an index-based preference panel, set initial value
 	[self.actionHandler configureForIndex:1];
@@ -1614,7 +1614,7 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 requestingIdealSize:(NSSize*)			outIdealSize
 {
 #pragma unused(aViewManager)
-	*outIdealSize = _idealFrame.size;
+	*outIdealSize = self.idealFrame.size;
 }// panelViewManager:requestingIdealSize:
 
 

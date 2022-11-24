@@ -419,7 +419,7 @@ initializeWithContext:(NSObject*)		aContext
 	
 	actionHandler.prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
 	
-	_actionHandler = actionHandler; // transfer ownership
+	self.actionHandler = actionHandler; // transfer ownership
 	
 	// TEMPORARY; not clear how to extract views from SwiftUI-constructed hierarchy;
 	// for now, assign to itself so it is not "nil"

@@ -69,11 +69,6 @@ Implements the “emulation” panel.
 */
 @interface PrefPanelTerminals_EmulationVC : Panel_ViewManager< Panel_Delegate,
 																PrefsWindow_PanelInterface > //{
-{
-@private
-	NSRect										_idealFrame;
-	PrefPanelTerminals_EmulationActionHandler*	_actionHandler;
-}
 
 // accessors
 	@property (strong) PrefPanelTerminals_EmulationActionHandler*
@@ -90,11 +85,6 @@ Implements the “terminal options” panel.
 */
 @interface PrefPanelTerminals_OptionsVC : Panel_ViewManager< Panel_Delegate,
 																PrefsWindow_PanelInterface > //{
-{
-@private
-	NSRect										_idealFrame;
-	PrefPanelTerminals_OptionsActionHandler*	_actionHandler;
-}
 
 // accessors
 	@property (strong) PrefPanelTerminals_OptionsActionHandler*
@@ -111,11 +101,6 @@ Implements the “terminal screen size” panel.
 */
 @interface PrefPanelTerminals_ScreenVC : Panel_ViewManager< Panel_Delegate,
 															PrefsWindow_PanelInterface > //{
-{
-@private
-	NSRect										_idealFrame;
-	PrefPanelTerminals_ScreenActionHandler*		_actionHandler;
-}
 
 // accessors
 	@property (strong) PrefPanelTerminals_ScreenActionHandler*

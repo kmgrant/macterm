@@ -1143,48 +1143,45 @@ dealloc
 }// dealloc
 
 
-#pragma mark New Methods
+#pragma mark Accessors
 
 
 /*!
-Responds to changes in the size of text views by
-updating the ideal frame size of the parent.
+Accessor.
 
-(2022.11)
+(4.1)
 */
-- (void)
-viewFrameDidChange:(NSNotification*)	aNotification
+- (Alert_IconID)
+iconID
 {
-	if ((aNotification.object == self.dialogTextUI) || (aNotification.object == self.helpTextUI))
+	return _iconID;
+}
+- (void)
+setIconID:(Alert_IconID)	anIconID
+{
+	if (_iconID != anIconID)
 	{
-		CGFloat		idealHeight = 0;
+		_iconID = anIconID;
 		
-		
-		if (NO == self.titleTextUI.hidden)
+		// change the displayed icon image
+		switch (anIconID)
 		{
-			idealHeight += NSHeight(self.titleTextUI.frame);
-			idealHeight += 10; // should match padding of text stack
-		}
+		case kAlert_IconIDNone:
+			self.iconImageName = @"";
+			break;
 		
-		if (NO == self.dialogTextUI.hidden)
-		{
-			idealHeight += self.dialogTextUI.frame.size.height;
-		}
+		case kAlert_IconIDNote:
+			self.iconImageName = NSImageNameApplicationIcon;
+			break;
 		
-		if (NO == self.helpTextUI.hidden)
-		{
-			idealHeight += 10; // should match padding of text stack
-			idealHeight += self.helpTextUI.frame.size.height;
+		case kAlert_IconIDStop: // for now, make this the same
+		case kAlert_IconIDDefault:
+		default:
+			self.iconImageName = NSImageNameCaution;
+			break;
 		}
-		
-		// notify observers (e.g. to resize any parent window)
-		self.idealFrameSize = NSMakeSize(self.idealFrameSize.width, idealHeight);
-		[self postNote:kPanel_IdealSizeDidChangeNotification];
 	}
-}// viewFrameDidChange:
-
-
-#pragma mark Accessors
+}// setIconID:
 
 
 /*!
@@ -1326,10 +1323,6 @@ didLoadContainerView:(NSView*)			aContainerView
 	
 	// remember the original icon size as a minimum height
 	self.idealIconSize = self.mainIconUI.frame.size;
-	
-	// update ideal size if text views are resized
-	//[self whenObject:self.dialogTextUI postsNote:NSViewFrameDidChangeNotification performSelector:@selector(viewFrameDidChange:)];
-	//[self whenObject:self.helpTextUI postsNote:NSViewFrameDidChangeNotification performSelector:@selector(viewFrameDidChange:)];
 }// panelViewManager:didLoadContainerView:
 
 
@@ -1532,47 +1525,6 @@ panelResizeAxes
 
 #pragma mark -
 @implementation AlertMessages_VC (AlertMessages_VCInternal) //{
-
-
-#pragma mark Accessors
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (Alert_IconID)
-iconID
-{
-	return _iconID;
-}
-- (void)
-setIconID:(Alert_IconID)	anIconID
-{
-	if (_iconID != anIconID)
-	{
-		_iconID = anIconID;
-		
-		// change the displayed icon image
-		switch (anIconID)
-		{
-		case kAlert_IconIDNone:
-			self.iconImageName = @"";
-			break;
-		
-		case kAlert_IconIDNote:
-			self.iconImageName = NSImageNameApplicationIcon;
-			break;
-		
-		case kAlert_IconIDStop: // for now, make this the same
-		case kAlert_IconIDDefault:
-		default:
-			self.iconImageName = NSImageNameCaution;
-			break;
-		}
-	}
-}// setIconID:
 
 
 #pragma mark New Methods
