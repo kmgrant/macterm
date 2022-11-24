@@ -987,6 +987,9 @@ handleQuitReview ()
 		Alert_Display(box.returnRef()); // retains alert until it is dismissed
 	}
 	
+	// (this is also used as a flag to detect an in-progress Quit review)
+	gCurrentQuitInitialSessionCount = 0;
+	
 	return result;
 }// handleQuitReview
 
@@ -3385,15 +3388,26 @@ applicationShouldTerminate:(NSApplication*)		sender
 	NSApplicationTerminateReply		result = NSTerminateNow;
 	
 	
-	gCurrentQuitCancelled = false;
-	
-	gCurrentQuitInitialSessionCount = SessionFactory_ReturnCount();
-	
-	// kill all open sessions (asking the user as appropriate), and if the
-	// user never cancels, *flags* the main event loop to terminate cleanly
-	if (NO == handleQuitReview())
+	if (gCurrentQuitInitialSessionCount > 0)
 	{
+		// a Quit dialog loop is already in progress but the
+		// user has invoked Quit again; ignore the 2nd one
+		// and wait for the first (otherwise multiple dialogs
+		// would appear)
 		result = NSTerminateCancel;
+	}
+	else
+	{
+		gCurrentQuitCancelled = false;
+		
+		gCurrentQuitInitialSessionCount = SessionFactory_ReturnCount();
+		
+		// kill all open sessions (asking the user as appropriate), and if the
+		// user never cancels, *flags* the main event loop to terminate cleanly
+		if (NO == handleQuitReview())
+		{
+			result = NSTerminateCancel;
+		}
 	}
 	
 	return result;
