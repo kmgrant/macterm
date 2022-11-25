@@ -10115,70 +10115,6 @@ mouseUp:(NSEvent*)	anEvent
 
 
 /*!
-Returns YES to allow background views to render virtually
-at any time.
-
-(4.1)
-*/
-- (BOOL)
-canDrawConcurrently
-{
-	// NOTE: This "YES" is meaningless unless the containing NSWindow
-	// returns "YES" from its "allowsConcurrentViewDrawing" method.
-	return YES;
-}// canDrawConcurrently
-
-
-/*!
-Render the specified part of the terminal background.
-
-(4.0)
-*/
-- (void)
-drawRect:(NSRect)	aRect
-{
-#pragma unused(aRect)
-	// WARNING: Since "canDrawConcurrently" returns YES, this should
-	// not do anything that requires execution on the main thread.
-	My_TerminalViewPtr	viewPtr = self.internalViewPtr;
-	CGContextRef		drawingContext = [[NSGraphicsContext currentContext] CGContext];
-	CGRect				clipBounds = CGContextGetClipBoundingBox(drawingContext);
-	
-	
-	if (nil != self.exactColor)
-	{
-		NSColor*	asRGB = [self.exactColor colorUsingColorSpace:[NSColorSpace sRGBColorSpace]];
-		
-		
-		// draw background
-		CGContextSetRGBFillColor(drawingContext, asRGB.redComponent, asRGB.greenComponent, asRGB.blueComponent, 1.0/* alpha */);
-		CGContextFillRect(drawingContext, clipBounds);
-	}
-	else
-	{
-		// NOTE: For porting purposes the colored background is simply drawn.
-		// Another option would be to update the layer’s background color
-		// directly whenever the view color changes.
-		if (nullptr != viewPtr)
-		{
-			CGFloatRGBColor const&		asFloats = viewPtr->text.colors[self.colorIndex];
-			
-			
-			// draw background
-			CGContextSetRGBFillColor(drawingContext, asFloats.red, asFloats.green, asFloats.blue, 1.0/* alpha */);
-			CGContextFillRect(drawingContext, clipBounds);
-		}
-		else
-		{
-			// no associated view yet; draw a dummy background
-			CGContextSetRGBFillColor(drawingContext, 1.0/* red */, 1.0/* green */, 1.0/* blue */, 1.0/* alpha */);
-			CGContextFillRect(drawingContext, clipBounds);
-		}
-	}
-}// drawRect:
-
-
-/*!
 Returns YES only if the view has no transparent parts.
 
 (4.0)
@@ -10188,6 +10124,58 @@ isOpaque
 {
 	return YES;
 }// isOpaque
+
+
+/*!
+Sets the layer background color appropriately.
+
+(2022.11)
+*/
+- (void)
+updateLayer
+{
+	My_TerminalViewPtr	viewPtr = self.internalViewPtr;
+	
+	
+	if (nil != self.exactColor)
+	{
+		NSColor*	asRGB = [self.exactColor colorUsingColorSpace:[NSColorSpace sRGBColorSpace]];
+		
+		
+		// set background
+		self.layer.backgroundColor = asRGB.CGColor;
+	}
+	else
+	{
+		if (nullptr != viewPtr)
+		{
+			CGFloatRGBColor const&	asFloats = viewPtr->text.colors[self.colorIndex];
+			NSColor*				asNSColor = [NSColor colorWithSRGBRed:asFloats.red green:asFloats.green blue:asFloats.blue alpha:1.0];
+			
+			
+			// set background
+			self.layer.backgroundColor = asNSColor.CGColor;
+		}
+		else
+		{
+			// no associated view yet; set a dummy background
+			self.layer.backgroundColor = NSColor.whiteColor.CGColor;
+		}
+	}
+}// updateLayer
+
+
+/*!
+Returns YES so that "updateLayer" is called instead
+of "drawRect:" to render the background color.
+
+(2022.11)
+*/
+- (BOOL)
+wantsUpdateLayer
+{
+	return YES;
+}// wantsUpdateLayer
 
 
 @end //} TerminalView_BackgroundView
