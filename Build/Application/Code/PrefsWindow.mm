@@ -77,6 +77,16 @@
 
 
 #pragma mark Constants
+
+// IMPORTANT: these should match "PreferencesSearch.plist" and other direct references to panel identifiers
+PrefsWindow_PanelID		kPrefsWindow_PanelIDFormats = CFSTR("net.macterm.prefpanels.Formats");
+PrefsWindow_PanelID		kPrefsWindow_PanelIDGeneral = CFSTR("net.macterm.prefpanels.General");
+PrefsWindow_PanelID		kPrefsWindow_PanelIDMacros = CFSTR("net.macterm.prefpanels.Macros");
+PrefsWindow_PanelID		kPrefsWindow_PanelIDSessions = CFSTR("net.macterm.prefpanels.Sessions");
+PrefsWindow_PanelID		kPrefsWindow_PanelIDTerminals = CFSTR("net.macterm.prefpanels.Terminals");
+PrefsWindow_PanelID		kPrefsWindow_PanelIDTranslations = CFSTR("net.macterm.prefpanels.Translations");
+PrefsWindow_PanelID		kPrefsWindow_PanelIDWorkspaces = CFSTR("net.macterm.prefpanels.Workspaces");
+
 namespace {
 
 /*!
@@ -257,13 +267,16 @@ collection of the appropriate type.
 If you want the user to immediately see the new settings,
 pass an appropriate nonzero command ID that will be used to
 request the display of a specific panel in the window.
+Unlike a direct call to PrefsWindow_DisplayPanelWithID(),
+in this function the panel only appears if the preferences
+are successfully added.
 
-(4.1)
+(2022.11)
 */
 void
 PrefsWindow_AddCollection		(Preferences_ContextRef		inReferenceContextToCopy,
 								 Preferences_TagSetRef		inTagSetOrNull,
-								 UInt32						inPrefPanelShowCommandIDOrZero)
+								 CFStringRef				inIdentifierOfPrefPanelToShowOrNull)
 {
 	// create and immediately save a new named context, which
 	// triggers callbacks to update Favorites lists, etc.
@@ -299,15 +312,33 @@ PrefsWindow_AddCollection		(Preferences_ContextRef		inReferenceContextToCopy,
 			}
 			else
 			{
-				if (0 != inPrefPanelShowCommandIDOrZero)
+				if (nullptr != inIdentifierOfPrefPanelToShowOrNull)
 				{
 					// trigger an automatic switch to focus a related part of the Preferences window
-					Commands_ExecuteByIDUsingEvent(inPrefPanelShowCommandIDOrZero);
+					PrefsWindow_DisplayPanelWithID(inIdentifierOfPrefPanelToShowOrNull);
 				}
 			}
 		}
 	}
 }// AddCollection
+
+
+/*!
+Displays the Preferences window and automatically
+switches to the specified panel.  The identifier
+can also refer to a particular tab, in which case
+the parent panel is shown and then the tab is
+automatically selected.
+
+(2022.11)
+*/
+void
+PrefsWindow_DisplayPanelWithID		(CFStringRef	inIdentifierOfPrefPanelToShow)
+{
+	[[PrefsWindow_Controller sharedPrefsWindowController]
+		displayPanelOrTabWithIdentifier:BRIDGE_CAST(inIdentifierOfPrefPanelToShow, NSString*)
+										withAnimation:YES];
+}// DisplayPanelWithID
 
 
 #pragma mark Internal Methods

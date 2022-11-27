@@ -89,25 +89,6 @@ These are all deprecated and are being gradually replaced
 by methods on objects in the Cocoa responder chain.
 */
 
-// commands currently used only in dialogs
-#define kCommandDisplayPrefPanelFormats			'SPrF'		// “Preferences“ window
-#define kCommandDisplayPrefPanelFormatsANSI		'SPFA'		// multiple interfaces
-#define kCommandDisplayPrefPanelFormatsNormal	'SPFN'		// multiple interfaces
-#define kCommandDisplayPrefPanelGeneral			'SPrG'		// “Preferences“ window
-#define kCommandDisplayPrefPanelMacros			'SPrM'		// “Preferences“ window
-#define kCommandDisplayPrefPanelSessions		'SPrS'		// “Preferences“ window
-#define kCommandDisplayPrefPanelSessionsDataFlow	'SPSD'	// “Preferences“ window
-#define kCommandDisplayPrefPanelSessionsGraphics	'SPSG'	// “Preferences“ window
-#define kCommandDisplayPrefPanelSessionsKeyboard	'SPSK'	// “Preferences“ window
-#define kCommandDisplayPrefPanelSessionsResource	'SPSR'	// “Preferences“ window
-#define kCommandDisplayPrefPanelTerminals		'SPrT'		// “Preferences“ window
-#define kCommandDisplayPrefPanelTerminalsEmulation	'SPTE'	// “Preferences“ window
-#define kCommandDisplayPrefPanelTerminalsHacks	'SPTH'		// “Preferences“ window
-#define kCommandDisplayPrefPanelTerminalsOptions	'SPTO'	// “Preferences“ window
-#define kCommandDisplayPrefPanelTerminalsScreen	'SPTS'		// “Preferences“ window
-#define kCommandDisplayPrefPanelTranslations	'SPrX'		// “Preferences“ window
-#define kCommandDisplayPrefPanelWorkspaces		'SPrW'		// “Preferences“ window
-
 /*!
 These MUST agree with "MainMenuCocoa.xib".  In the Carbon days,
 these were menu IDs.  For Cocoa, they are the "tag" values on
@@ -132,12 +113,6 @@ enum
 };
 
 #pragma mark Types
-
-struct Commands_ExecutionEventContext
-{
-	UInt32		commandID;		//!< which command the event is for
-};
-typedef Commands_ExecutionEventContext*		Commands_ExecutionEventContextPtr;
 
 #ifdef __OBJC__
 
@@ -896,14 +871,6 @@ void
 
 //!\name Executing Commands
 //@{
-
-// WARNING: NOT THREAD SAFE, USE Commands_ExecuteByIDUsingEvent() TO INSERT A COMMAND INTO THE MAIN THREAD’S QUEUE
-Boolean
-	Commands_ExecuteByID					(UInt32						inCommandID);
-
-Boolean
-	Commands_ExecuteByIDUsingEvent			(UInt32						inCommandID,
-											 void* _Nullable			inUnusedLegacyPtr = nullptr);
 
 #ifdef __OBJC__
 Boolean

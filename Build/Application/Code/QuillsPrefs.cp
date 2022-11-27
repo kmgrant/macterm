@@ -48,6 +48,7 @@
 // application includes
 #include "MacroManager.h"
 #include "Preferences.h"
+#include "PrefsWindow.h"
 
 
 
@@ -244,40 +245,40 @@ Prefs::import_from_file		(std::string	inPathname,
 						}
 						else
 						{
-							UInt32		showCommand = kCommandDisplayPrefPanelGeneral;
+							PrefsWindow_PanelID		autoShowPanelID = kPrefsWindow_PanelIDGeneral;
 							
 							
 							// successfully created; now show the relevant Preferences window pane
 							switch (inferredClass)
 							{
 							case Quills::Prefs::FORMAT:
-								showCommand = kCommandDisplayPrefPanelFormats;
+								autoShowPanelID = kPrefsWindow_PanelIDFormats;
 								break;
 							
 							case Quills::Prefs::MACRO_SET:
-								showCommand = kCommandDisplayPrefPanelMacros;
+								autoShowPanelID = kPrefsWindow_PanelIDMacros;
 								break;
 							
 							case Quills::Prefs::SESSION:
-								showCommand = kCommandDisplayPrefPanelSessions;
+								autoShowPanelID = kPrefsWindow_PanelIDSessions;
 								break;
 							
 							case Quills::Prefs::TERMINAL:
-								showCommand = kCommandDisplayPrefPanelTerminals;
+								autoShowPanelID = kPrefsWindow_PanelIDTerminals;
 								break;
 							
 							case Quills::Prefs::TRANSLATION:
-								showCommand = kCommandDisplayPrefPanelTranslations;
+								autoShowPanelID = kPrefsWindow_PanelIDTranslations;
 								break;
 							
 							case Quills::Prefs::WORKSPACE:
-								showCommand = kCommandDisplayPrefPanelWorkspaces;
+								autoShowPanelID = kPrefsWindow_PanelIDWorkspaces;
 								break;
 							
 							default:
 								break;
 							}
-							UNUSED_RETURN(Boolean)Commands_ExecuteByIDUsingEvent(showCommand);
+							PrefsWindow_DisplayPanelWithID(autoShowPanelID);
 						}
 					}
 				}

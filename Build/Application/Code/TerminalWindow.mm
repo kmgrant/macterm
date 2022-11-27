@@ -499,8 +499,7 @@ TerminalWindow_DisplayCustomFormatUI	(TerminalWindowRef		inRef)
 													Preferences_TagSetRef	tagSet = PrefPanelFormats_NewTagSet();
 													
 													
-													PrefsWindow_AddCollection(temporaryContext, tagSet,
-																				kCommandDisplayPrefPanelFormats);
+													PrefsWindow_AddCollection(temporaryContext, tagSet, kPrefsWindow_PanelIDFormats);
 													Preferences_ReleaseTagSet(&tagSet);
 												});
 			GenericDialog_SetImplementation(dialog.returnRef(), inRef);
@@ -633,8 +632,7 @@ TerminalWindow_DisplayCustomTranslationUI	(TerminalWindowRef		inRef)
 													Preferences_TagSetRef	tagSet = PrefPanelTranslations_NewTagSet();
 													
 													
-													PrefsWindow_AddCollection(temporaryContext, tagSet,
-																				kCommandDisplayPrefPanelTranslations);
+													PrefsWindow_AddCollection(temporaryContext, tagSet, kPrefsWindow_PanelIDTranslations);
 													Preferences_ReleaseTagSet(&tagSet);
 												});
 			GenericDialog_SetImplementation(dialog.returnRef(), inRef);

@@ -357,105 +357,6 @@ Commands_Done ()
 
 
 /*!
-Attempts to handle a command at the application level,
-given its ID (all IDs are declared in "Commands.h").
-Returns true only if the event is handled successfully.
-
-IMPORTANT:	This works ONLY for command IDs that are
-			handled here, at the application level.  Many
-			events are handled in more local contexts.
-			Commands_ExecuteByIDUsingEvent() should
-			generally be used instead, so that a command
-			invocation request reaches handlers no matter
-			where they are installed.
-
-(3.0)
-*/
-Boolean
-Commands_ExecuteByID	(UInt32		inCommandID)
-{
-	Boolean		result = true;
-	
-	
-	{
-		// no handler for the specified command; check against
-		// the following list of known commands
-		SessionRef			frontSession = nullptr;
-		TerminalWindowRef	frontTerminalWindow = nullptr;
-		TerminalScreenRef	activeScreen = nullptr;
-		TerminalViewRef		activeView = nullptr;
-		Boolean				isSession = false; // initially...
-		Boolean				isTerminal = false; // initially...
-		
-		
-		// TEMPORARY: This is a TON of legacy context crap.  Most of this
-		// should be refocused or removed.  In addition, it is expensive
-		// to do it per-command, it should probably be put into a more
-		// global context that is automatically updated whenever the user
-		// focus session is changed (and only then).
-		frontSession = SessionFactory_ReturnUserRecentSession();
-		frontTerminalWindow = (nullptr == frontSession) ? nullptr : Session_ReturnActiveTerminalWindow(frontSession);
-		activeScreen = (nullptr == frontTerminalWindow) ? nullptr : TerminalWindow_ReturnScreenWithFocus(frontTerminalWindow);
-		activeView = (nullptr == frontTerminalWindow) ? nullptr : TerminalWindow_ReturnViewWithFocus(frontTerminalWindow);
-		isSession = (nullptr != frontSession);
-		isTerminal = ((nullptr != activeScreen) && (nullptr != activeView));
-		
-		switch (inCommandID)
-		{
-		//kCommandDisplayPrefPanelFormats:
-		//kCommandDisplayPrefPanelGeneral:
-		//kCommandDisplayPrefPanelMacros:
-		//kCommandDisplayPrefPanelSessions:
-		//kCommandDisplayPrefPanelTerminals:
-		//	see PrefsWindow.mm
-		//	break;
-		
-		default:
-			result = false;
-			break;
-		}
-	}
-	
-	return result;
-}// ExecuteByID
-
-
-/*!
-Like Commands_ExecuteByID(), except it constructs a
-Carbon Event and sends it to the specified target.  If
-the target is "nullptr", the first target attempted is
-the user focus; barring that, the active window; and
-barring that, the application itself.
-
-Returns true only if the event is handled successfully.
-
-Unlike Commands_ExecuteByID(), this request should
-propagate to an appropriate handler no matter where
-the handler is installed.
-
-(3.1)
-*/
-Boolean
-Commands_ExecuteByIDUsingEvent	(UInt32		inCommandID,
-								 void*		UNUSED_ARGUMENT(inUnusedLegacyPtr))
-{
-	Boolean		result = false;
-	
-	
-	// conceptually, this should probably be replaced by calls
-	// to NSResponder’s "tryToPerform:with:" or a similar method
-	// to go up the chain; no longer implemented, Carbon legacy;
-	// this will be a big source of problems at first but it is
-	// easier to just look for errors and implement appropriate
-	// actions at the right points in the responder chain
-	Console_Warning(Console_WriteValueFourChars, "Commands_ExecuteByIDUsingEvent() is no longer implemented; failed to process request, command ID", inCommandID);
-	result = Commands_ExecuteByID(inCommandID); // approximation
-	
-	return result;
-}// ExecuteByIDUsingEvent
-
-
-/*!
 Adds to the specified menu a list of the names of valid
 contexts in the specified preferences class.
 
@@ -3345,7 +3246,15 @@ hasVisibleWindows:(BOOL)						flag
 		}
 		
 		// no open windows - respond by spawning a new session
-		Commands_ExecuteByIDUsingEvent(newCommandID);
+		{
+			Boolean		didOpen = SessionFactory_NewSessionWithSpecialCommand(SessionFactory_NewTerminalWindowUserFavorite(), newCommandID);
+			
+			
+			if (false == didOpen)
+			{
+				Console_Warning(Console_WriteValueFourChars, "failed to auto-open session with type", newCommandID);
+			}
+		}
 		
 		// the event is completely handled, so disable the default behavior
 		result = NO;

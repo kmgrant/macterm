@@ -1151,8 +1151,7 @@ SessionFactory_DisplayUserCustomizationUI	(TerminalWindowRef			inTerminalWindow,
 													Preferences_TagSetRef	tagSet = PrefPanelSessions_NewResourcePaneTagSet();
 													
 													
-													PrefsWindow_AddCollection(temporaryContext, tagSet,
-																				kCommandDisplayPrefPanelSessions);
+													PrefsWindow_AddCollection(temporaryContext, tagSet, kPrefsWindow_PanelIDSessions);
 													Preferences_ReleaseTagSet(&tagSet);
 												});
 			GenericDialog_SetItemDialogEffect(dialog.returnRef(), kGenericDialog_ItemIDButton2, kGenericDialog_DialogEffectCloseImmediately);

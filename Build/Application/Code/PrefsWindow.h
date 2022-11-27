@@ -55,6 +55,17 @@
 
 
 
+#pragma mark Constants
+
+typedef CFStringRef PrefsWindow_PanelID;
+extern PrefsWindow_PanelID		kPrefsWindow_PanelIDFormats;
+extern PrefsWindow_PanelID		kPrefsWindow_PanelIDGeneral;
+extern PrefsWindow_PanelID		kPrefsWindow_PanelIDMacros;
+extern PrefsWindow_PanelID		kPrefsWindow_PanelIDSessions;
+extern PrefsWindow_PanelID		kPrefsWindow_PanelIDTerminals;
+extern PrefsWindow_PanelID		kPrefsWindow_PanelIDTranslations;
+extern PrefsWindow_PanelID		kPrefsWindow_PanelIDWorkspaces;
+
 #pragma mark Types
 
 #ifdef __OBJC__
@@ -198,8 +209,11 @@ changes to an interface declared in a ".mm" file.
 #pragma mark Public Methods
 
 void
-	PrefsWindow_AddCollection		(Preferences_ContextRef		inReferenceContextToCopy,
-									 Preferences_TagSetRef		inTagSetOrNull = nullptr,
-									 UInt32						inPrefPanelShowCommandIDOrZero = 0);
+	PrefsWindow_AddCollection			(Preferences_ContextRef		inReferenceContextToCopy,
+										 Preferences_TagSetRef		inTagSetOrNull = nullptr,
+										 PrefsWindow_PanelID		inIdentifierOfPrefPanelToShowOrNull = nullptr);
+
+void
+	PrefsWindow_DisplayPanelWithID		(PrefsWindow_PanelID		inIdentifierOfPrefPanelToShowOrNull = nullptr);
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

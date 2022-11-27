@@ -67,21 +67,6 @@ enum
 	kConstantsRegistry_NSErrorResourceNotFound	= 5, // generic
 };
 
-/*!
-Panel descriptors, which help to identify panels when given
-only an opaque reference to one.  See "Panel.h".
-
-The order here is not important, though each panel needs a
-unique value.
-*/
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorFormats				= CFSTR("net.macterm.prefpanels.formats");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorGeneral				= CFSTR("net.macterm.prefpanels.general");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorMacros				= CFSTR("net.macterm.prefpanels.macros");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorSessions			= CFSTR("net.macterm.prefpanels.sessions");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorTerminals			= CFSTR("net.macterm.prefpanels.terminals");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorTranslations		= CFSTR("net.macterm.prefpanels.translations");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorWorkspaces			= CFSTR("net.macterm.prefpanels.workspaces");
-
 //@}
 
 #ifdef __OBJC__
