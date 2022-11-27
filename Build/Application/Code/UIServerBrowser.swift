@@ -353,7 +353,7 @@ public struct UIServerBrowser_View : View {
 							}
 						}.frame(minWidth: 200, minHeight: 200, idealHeight: 200)
 					}.withMacTermSectionLayout()
-				}.animation(.spring())
+				}.animation(.interactiveSpring())
 			}
 			Spacer().asMacTermSectionSpacingV().fixedSize()
 			//Spacer().layoutPriority(1)
