@@ -307,7 +307,6 @@ TerminalViewRef			getActiveView					(My_TerminalWindowPtr);
 void					getWindowSizeFromViewSize		(My_TerminalWindowPtr, CGFloat, CGFloat, CGFloat*, CGFloat*);
 bool					lessThanIfGreaterAreaCocoa		(NSWindow*, NSWindow*);
 UInt16					returnScrollBarWidth			(My_TerminalWindowPtr);
-UInt16					returnStatusBarHeight			(My_TerminalWindowPtr);
 UInt16					returnToolbarHeight				(My_TerminalWindowPtr);
 void					sessionStateChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void					setScreenPreferences			(My_TerminalWindowPtr, Preferences_ContextRef, Boolean = false);
@@ -2429,8 +2428,7 @@ getWindowSizeFromViewSize	(My_TerminalWindowPtr	inPtr,
 	}
 	if (nullptr != outWindowContentHeightInPixels)
 	{
-		*outWindowContentHeightInPixels = inScreenInteriorHeightInPixels + returnStatusBarHeight(inPtr) +
-											returnToolbarHeight(inPtr);
+		*outWindowContentHeightInPixels = inScreenInteriorHeightInPixels + returnToolbarHeight(inPtr);
 	}
 }// getWindowSizeFromViewSize
 
@@ -2496,32 +2494,29 @@ returnScrollBarWidth	(My_TerminalWindowPtr	inPtr)
 
 
 /*!
-Returns the height in pixels of the status bar.  The status bar
-height is defined as the number of pixels between the toolbar
-and the top edge of the terminal screen; thus, an invisible
-status bar has zero height.
-
-(3.0)
-*/
-UInt16
-returnStatusBarHeight	(My_TerminalWindowPtr	UNUSED_ARGUMENT(inPtr))
-{
-	return 0;
-}// returnStatusBarHeight
-
-
-/*!
 Returns the height in pixels of the toolbar.  The toolbar
 height is defined as the number of pixels between the top
-edge of the window and the top edge of the status bar; thus,
-an invisible toolbar has zero height.
+edge of the window and the top edge of terminal views;
+thus, an invisible toolbar has zero height.
 
 (3.0)
 */
 UInt16
-returnToolbarHeight		(My_TerminalWindowPtr	UNUSED_ARGUMENT(inPtr))
+returnToolbarHeight		(My_TerminalWindowPtr	inPtr)
 {
-	return 0;
+	TerminalViewRef			activeView = getActiveView(inPtr);
+	TerminalView_Object*	mainNSView = TerminalView_ReturnContainerNSView(activeView);
+	CGFloat const			contentHeight = mainNSView.frame.size.height;
+	CGFloat const			frameHeight = [inPtr->window frameRectForContentRect:mainNSView.frame].size.height;
+	CGFloat					result = (frameHeight - contentHeight);
+	
+	
+	if (result < 0)
+	{
+		result = 0;
+	}
+	
+	return result;
 }// returnToolbarHeight
 
 
@@ -2768,21 +2763,14 @@ setStandardState	(My_TerminalWindowPtr	inPtr,
 	CGFloat		windowWidth = 0;
 	CGFloat		windowHeight = 0;
 	CGFloat		originalHeight = NSHeight(inPtr->window.frame);
+	NSRect		newFrameRect = inPtr->window.frame;
 	
 	
 	getWindowSizeFromViewSize(inPtr, inScreenWidthInPixels, inScreenHeightInPixels, &windowWidth, &windowHeight);
-	
-	{
-		NSRect		newContentRect = [inPtr->window contentRectForFrameRect:inPtr->window.frame];
-		NSRect		newFrameRect;
-		
-		
-		newContentRect.size.width = windowWidth;
-		newContentRect.size.height = windowHeight;
-		newFrameRect = [inPtr->window frameRectForContentRect:newContentRect];
-		newFrameRect.origin.y += (originalHeight - NSHeight(newFrameRect));
-		[inPtr->window setFrame:newFrameRect display:YES animate:inAnimatedResize];
-	}
+	newFrameRect.size.width = windowWidth;
+	newFrameRect.size.height = windowHeight;
+	newFrameRect.origin.y += (originalHeight - NSHeight(newFrameRect)); // keep top-left unchanged
+	[inPtr->window setFrame:newFrameRect display:YES animate:inAnimatedResize];
 }// setStandardState
 
 
@@ -4012,7 +4000,64 @@ terminal’s current number of rows and columns on the display.
 performFormatTextMaximum:(id)	sender
 {
 #pragma unused(sender)
-	Console_Warning(Console_WriteLine, "unimplemented: set-maximum-size");
+	TerminalWindowRef	terminalWindow = self.terminalWindowRef;
+	
+	
+	if (false == TerminalWindow_IsFullScreen(terminalWindow))
+	{
+		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
+		TerminalViewRef const			referenceView = getActiveView(ptr);
+		TerminalScreenRef const			referenceScreen = getActiveScreen(ptr);
+		TerminalView_DisplayMode const	oldMode = TerminalView_ReturnDisplayMode(referenceView);
+		NSRect const					usableScreenFrame = ptr->window.screen.visibleFrame;
+		CGFloat const					maximumPixelWidth = usableScreenFrame.size.width;
+		CGFloat const					maximumPixelHeight = usableScreenFrame.size.height;
+		CGFloat const					fontAdjustmentPerLoop = 1.0; // arbitrary; nudge the font repeatedly to test sizes
+		UInt16 const					columnCount = Terminal_ReturnColumnCount(referenceScreen);
+		UInt16 const					rowCount = Terminal_ReturnRowCount(referenceScreen);
+		TerminalView_PixelWidth			pixelWidth;
+		TerminalView_PixelHeight		pixelHeight;
+		CGFloat							newWindowContentWidth = 0;
+		CGFloat							newWindowContentHeight = 0;
+		SInt16							loopGuard = 0;
+		
+		
+		// save and temporarily override zoom mode so that font size always changes
+		UNUSED_RETURN(TerminalView_Result)TerminalView_SetDisplayMode(referenceView, kTerminalView_DisplayModeNormal);
+		UNUSED_RETURN(TerminalView_Result)TerminalView_SetResizeScreenBufferWithView(referenceView, false);
+		
+		// keep trying font adjustments until the window is too big to fit
+		// (due to the way display updates work, the user won’t see glitches
+		// when the window jumps over its target size and is reduced again)
+		for (;;)
+		{
+			UNUSED_RETURN(Boolean)TerminalWindow_SetFontRelativeSize(terminalWindow, fontAdjustmentPerLoop,
+																		0/* absolute limit */, false/* allow Undo */);
+			TerminalView_GetTheoreticalViewSize(referenceView, columnCount, TerminalView_RowIndex(rowCount), pixelWidth, pixelHeight);
+			getWindowSizeFromViewSize(ptr, pixelWidth.precisePixels(), pixelHeight.precisePixels(),
+										&newWindowContentWidth, &newWindowContentHeight);
+			if ((newWindowContentWidth >= maximumPixelWidth) || (newWindowContentHeight >= maximumPixelHeight))
+			{
+				//Console_WriteLine("auto-font-size: window cannot become any bigger"); // debug
+				UNUSED_RETURN(Boolean)TerminalWindow_SetFontRelativeSize(terminalWindow, -fontAdjustmentPerLoop,
+																			0/* absolute limit */, false/* allow Undo */);
+				break;
+			}
+			
+			// if the font is extremely tiny, it may require several
+			// iterations to discover the final size but generally
+			// this should be naturally terminating after a few tries
+			if (++loopGuard > 50/* arbitrary */)
+			{
+				Console_Warning(Console_WriteLine, "aborting auto-font-size after unexpected looping");
+				break;
+			}
+		}
+		
+		// restore previous display modes
+		UNUSED_RETURN(TerminalView_Result)TerminalView_SetResizeScreenBufferWithView(referenceView, true);
+		UNUSED_RETURN(TerminalView_Result)TerminalView_SetDisplayMode(referenceView, oldMode);
+	}
 }
 
 
