@@ -124,10 +124,6 @@ NOTE:	The underlying listener that is created uses an
 		target object can access the data that it needs.
 */
 @interface ListenerModel_StandardListener : NSObject < NSCopying > //{
-{
-	ListenerModel_ListenerRef	listenerRef;
-	NSInvocation*				methodInvoker;
-}
 
 // initializers
 	- (instancetype)
@@ -141,7 +137,7 @@ NOTE:	The underlying listener that is created uses an
 	context:(void*)_; // forwards an event to the selector on the target
 
 // accessors
-	- (ListenerModel_ListenerRef)
+	@property (assign) ListenerModel_ListenerRef
 	listenerRef; // for compatibility with older APIs
 	- (void)
 	setEventFiredSelector:(SEL)_; // change selector given at initialization time

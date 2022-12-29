@@ -67,6 +67,18 @@ enum
 } // anonymous namespace
 
 #pragma mark Types
+
+/*!
+Private properties.
+*/
+@interface ListenerModel_StandardListener () //{
+
+// accessors
+	@property (strong) NSInvocation*
+	methodInvoker;
+
+@end //}
+
 namespace {
 
 typedef std::vector< ListenerModel_ListenerRef >			My_ListenerList;
@@ -883,8 +895,8 @@ objectiveCStandardListener	(ListenerModel_Ref		inModel,
 							 void*					inEventContext,
 							 void*					inStandardListener)
 {
-	ListenerModel_StandardListener*		asStandardListener = REINTERPRET_CAST(inStandardListener,
-																				ListenerModel_StandardListener*);
+	ListenerModel_StandardListener*		asStandardListener = BRIDGE_CAST(inStandardListener,
+																			ListenerModel_StandardListener*);
 	
 	
 	[asStandardListener listenerModel:inModel firedEvent:inEvent context:inEventContext];
@@ -1042,8 +1054,8 @@ eventFiredSelector:(SEL)	aSelector
 	self = [super init];
 	if (nil != self)
 	{
-		self->listenerRef = ListenerModel_NewStandardListener(objectiveCStandardListener, self/* context */);
-		self->methodInvoker = [[NSInvocation invocationWithSelector:aSelector target:aTarget] retain];
+		_listenerRef = ListenerModel_NewStandardListener(objectiveCStandardListener, BRIDGE_CAST(self, void*)/* context */);
+		_methodInvoker = [NSInvocation invocationWithSelector:aSelector target:aTarget];
 	}
 	return self;
 }// initWithTarget:eventFiredSelector:
@@ -1057,9 +1069,7 @@ Destructor.
 - (void)
 dealloc
 {
-	ListenerModel_ReleaseListener(&listenerRef);
-	[self->methodInvoker release];
-	[super dealloc];
+	ListenerModel_ReleaseListener(&_listenerRef);
 }// dealloc
 
 
@@ -1081,8 +1091,8 @@ NOTE:	While this creates a unique internal listener, the
 copyWithZone:(NSZone*)	zone
 {
 	id		result = [[self.class allocWithZone:zone]
-						initWithTarget:self->methodInvoker.target
-										eventFiredSelector:self->methodInvoker.selector];
+						initWithTarget:self.methodInvoker.target
+										eventFiredSelector:self.methodInvoker.selector];
 	
 	
 	return result;
@@ -1104,28 +1114,14 @@ listenerModel:(ListenerModel_Ref)	aModel
 firedEvent:(ListenerModel_Event)	anEvent
 context:(void*)						aContext
 {
-	[self->methodInvoker setArgument:&aModel atIndex:2];
-	[self->methodInvoker setArgument:&anEvent atIndex:3];
-	[self->methodInvoker setArgument:&aContext atIndex:4];
-	[self->methodInvoker invoke];
+	[self.methodInvoker setArgument:&aModel atIndex:2];
+	[self.methodInvoker setArgument:&anEvent atIndex:3];
+	[self.methodInvoker setArgument:&aContext atIndex:4];
+	[self.methodInvoker invoke];
 }// listenerModel:firedEvent:context:
 
 
 #pragma mark Accessors
-
-
-/*!
-Returns a reference to a listener, which is needed when
-installing this callback via an API that expects such a
-reference instead of an Objective-C object.
-
-(2.6)
-*/
-- (ListenerModel_ListenerRef)
-listenerRef
-{
-	return self->listenerRef;
-}// listenerRef
 
 
 /*!
@@ -1141,7 +1137,7 @@ This may be important to do after using the "copy" method.
 - (void)
 setEventFiredSelector:(SEL)		aSelector
 {
-	self->methodInvoker.selector = aSelector;
+	self.methodInvoker.selector = aSelector;
 }// setEventFiredSelector:
 
 
@@ -1156,7 +1152,7 @@ This may be important to do after using the "copy" method.
 - (void)
 setTarget:(id)		anObject
 {
-	self->methodInvoker.target = anObject;
+	self.methodInvoker.target = anObject;
 }// setTarget:
 
 @end //} ListenerModel_StandardListener

@@ -112,7 +112,7 @@
 		0AC6BB490A8C0BA100AFF37A /* AlertMessages.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDB8055432A400ACDF3A /* AlertMessages.mm */; };
 		0AC6BB4B0A8C0BA100AFF37A /* Terminal.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE25055432A400ACDF3A /* Terminal.mm */; };
 		0AC6BB500A8C0BA100AFF37A /* CFKeyValueInterface.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CD0607FAC09700248DDF /* CFKeyValueInterface.cp */; };
-		0AC6BB550A8C0BA100AFF37A /* ListenerModel.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CCF607FAC04200248DDF /* ListenerModel.mm */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		0AC6BB550A8C0BA100AFF37A /* ListenerModel.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CCF607FAC04200248DDF /* ListenerModel.mm */; };
 		0ACA57D30AEADDE800B5F482 /* GenericDialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ACA57D20AEADDE700B5F482 /* GenericDialog.mm */; };
 		0ACBC3570D5BBC6300FCF05F /* CocoaBasic.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ACBC3560D5BBC6300FCF05F /* CocoaBasic.mm */; };
 		0ACC406A1A433256009D0D53 /* GenericPanelNumberedList.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ACC40691A433256009D0D53 /* GenericPanelNumberedList.mm */; };
