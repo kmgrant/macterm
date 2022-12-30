@@ -3625,11 +3625,21 @@ void
 TerminalView_ZoomToCursor	(TerminalViewRef	inView)
 {
 	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
+	TerminalView_Result			viewResult = kTerminalView_ResultOK;
+	CGRect						windowRelativeCursorBounds = CGRectZero;
 	
 	
-	if (viewPtr != nullptr)
+	viewResult = TerminalView_GetCursorBoundsWindowRelative(inView, windowRelativeCursorBounds);
+	if (kTerminalView_ResultOK != viewResult)
 	{
-		Console_Warning(Console_WriteLine, "zoom-to-cursor not implemented for Cocoa");
+		Console_Warning(Console_WriteLine, "zoom to cursor: unable to find window-relative terminal cursor coordinates");
+	}
+	else
+	{
+		NSWindow*	viewWindow = TerminalView_ReturnNSWindow(inView);
+		
+		
+		CocoaAnimation_TransitionWindowSectionForSearchResult(viewWindow, windowRelativeCursorBounds);
 	}
 }// ZoomToCursor
 

@@ -55,16 +55,6 @@ enum My_AnimationEffect
 };
 
 /*!
-Time distributions used by CocoaAnimation_WindowFrameAnimator.
-These determine how frame delays are scaled at each stage.
-*/
-enum My_AnimationTimeDistribution
-{
-	kMy_AnimationTimeDistributionLinear		= 0,	//!< equal delays
-	kMy_AnimationTimeDistributionEaseOut	= 1		//!< slower at the end, faster at the start
-};
-
-/*!
 Transitions used by CocoaAnimation_WindowFrameAnimator.  These
 determine the kinds of steps that are taken to move from the
 source frame to the target frame.
@@ -96,6 +86,8 @@ extended to match the image window itself.
 @interface CocoaAnimation_ImageWindow : NSWindow //{
 
 // accessors
+	@property (assign) NSTimeInterval
+	animationResizeTime;
 	@property (strong) CocoaAnimation_WindowFrameAnimator*
 	frameAnimationManager;
 
@@ -130,8 +122,6 @@ Core Animation was available).
 	frameDeltaSizeH;
 	@property (assign) float
 	frameDeltaSizeV;
-	@property (assign) NSTimeInterval*
-	frameDelays;
 	@property (assign) float*
 	frameOffsetsH;
 	@property (assign) float*
@@ -152,8 +142,6 @@ Core Animation was available).
 	finalWindow:(NSWindow*)_
 	fromFrame:(NSRect)_
 	toFrame:(NSRect)_
-	totalDelay:(NSTimeInterval)_
-	delayDistribution:(My_AnimationTimeDistribution)_
 	effect:(My_AnimationEffect)_
 	simplified:(BOOL)_ NS_DESIGNATED_INITIALIZER;
 	- (instancetype)
@@ -162,8 +150,6 @@ Core Animation was available).
 	finalWindow:(NSWindow*)_
 	fromFrame:(NSRect)_
 	toFrame:(NSRect)_
-	totalDelay:(NSTimeInterval)_
-	delayDistribution:(My_AnimationTimeDistribution)_
 	effect:(My_AnimationEffect)_;
 
 @end //}
@@ -207,7 +193,6 @@ CocoaAnimation_TransitionWindowForDuplicate		(NSWindow*		inTargetWindow,
 	
 	// animate the change
 	{
-		float const						kAnimationDelay = 0.05f;
 		NSRect							oldFrame = inRelativeToWindow.frame;
 		NSRect							newFrame = NSZeroRect;
 		NSRect							mainScreenFrame = [NSScreen mainScreen].visibleFrame;
@@ -232,7 +217,7 @@ CocoaAnimation_TransitionWindowForDuplicate		(NSWindow*		inTargetWindow,
 		// as a precaution, arrange to move the window to the correct
 		// location after a short delay (the animation may fail)
 		__weak decltype(inTargetWindow)		weakTargetWindow = inTargetWindow;
-		CocoaExtensions_RunLater((kAnimationDelay + 0.25),
+		CocoaExtensions_RunLater(0.30/* arbitrary */,
 									^{ [weakTargetWindow setFrame:newFrame display:YES]; });
 		
 		// animate!
@@ -240,8 +225,7 @@ CocoaAnimation_TransitionWindowForDuplicate		(NSWindow*		inTargetWindow,
 		imageWindow.level = inTargetWindow.level;
 		imageWindow.frameAnimationManager = [[CocoaAnimation_WindowFrameAnimator alloc]
 												initWithTransition:kMy_AnimationTransitionSlide imageWindow:imageWindow finalWindow:inTargetWindow
-																	fromFrame:oldFrame toFrame:newFrame totalDelay:kAnimationDelay
-																	delayDistribution:kMy_AnimationTimeDistributionLinear
+																	fromFrame:oldFrame toFrame:newFrame
 																	effect:kMy_AnimationEffectFadeIn];
 	}
 }// @autoreleasepool
@@ -282,8 +266,7 @@ CocoaAnimation_TransitionWindowForHide	(NSWindow*		inTargetWindow,
 	imageWindow.level = inTargetWindow.level;
 	imageWindow.frameAnimationManager = [[CocoaAnimation_WindowFrameAnimator alloc]
 											initWithTransition:kMy_AnimationTransitionSlide imageWindow:imageWindow finalWindow:nil
-																fromFrame:oldFrame toFrame:newFrame totalDelay:0.04
-																delayDistribution:kMy_AnimationTimeDistributionEaseOut
+																fromFrame:oldFrame toFrame:newFrame
 																effect:kMy_AnimationEffectNone];
 	
 	// hide the original window immediately; the animation on the
@@ -325,8 +308,7 @@ CocoaAnimation_TransitionWindowForMove	(NSWindow*		inTargetWindow,
 	imageWindow.level = inTargetWindow.level;
 	imageWindow.frameAnimationManager = [[CocoaAnimation_WindowFrameAnimator alloc]
 											initWithTransition:kMy_AnimationTransitionSlide imageWindow:imageWindow finalWindow:nil
-																fromFrame:oldFrame toFrame:newFrame totalDelay:0.04
-																delayDistribution:kMy_AnimationTimeDistributionEaseOut
+																fromFrame:oldFrame toFrame:newFrame
 																effect:kMy_AnimationEffectFadeIn];
 	
 	// the original window moves after a short delay
@@ -387,8 +369,7 @@ CocoaAnimation_TransitionWindowForRemove	(NSWindow*		inTargetWindow,
 		imageWindow.level = inTargetWindow.level;
 		imageWindow.frameAnimationManager = [[CocoaAnimation_WindowFrameAnimator alloc]
 												initWithTransition:kMy_AnimationTransitionSlide imageWindow:imageWindow finalWindow:nil
-																	fromFrame:oldFrame toFrame:newFrame totalDelay:0.04
-																	delayDistribution:kMy_AnimationTimeDistributionEaseOut
+																	fromFrame:oldFrame toFrame:newFrame
 																	effect:kMy_AnimationEffectFadeOut];
 		
 		// hide the original window immediately; the animation on the
@@ -464,8 +445,7 @@ CocoaAnimation_TransitionWindowForSheetOpen		(NSWindow*		inTargetWindow,
 		imageWindow.level = (1 + inTargetWindow.level);
 		imageWindow.frameAnimationManager = [[CocoaAnimation_WindowFrameAnimator alloc]
 												initWithTransition:kMy_AnimationTransitionSlide imageWindow:imageWindow finalWindow:inTargetWindow
-																	fromFrame:oldFrame toFrame:newFrame totalDelay:kAnimationDelay
-																	delayDistribution:kMy_AnimationTimeDistributionEaseOut
+																	fromFrame:oldFrame toFrame:newFrame
 																	effect:kMy_AnimationEffectFadeIn];
 	}
 	else
@@ -517,8 +497,7 @@ CocoaAnimation_TransitionWindowSectionForOpen	(NSWindow*		inTargetWindow,
 	imageWindow.level = inTargetWindow.level;
 	imageWindow.frameAnimationManager = [[CocoaAnimation_WindowFrameAnimator alloc]
 											initWithTransition:kMy_AnimationTransitionSlide imageWindow:imageWindow finalWindow:nil
-																fromFrame:oldFrame toFrame:newFrame totalDelay:0.05
-																delayDistribution:kMy_AnimationTimeDistributionEaseOut
+																fromFrame:oldFrame toFrame:newFrame
 																effect:kMy_AnimationEffectFadeOut];
 }// @autoreleasepool
 }// TransitionWindowSectionForOpen
@@ -570,8 +549,7 @@ CocoaAnimation_TransitionWindowSectionForSearchResult	(NSWindow*		inTargetWindow
 	imageWindow.level = inTargetWindow.level;
 	imageWindow.frameAnimationManager = [[CocoaAnimation_WindowFrameAnimator alloc]
 											initWithTransition:kMy_AnimationTransitionSlide imageWindow:imageWindow finalWindow:nil
-																fromFrame:oldFrame toFrame:newFrame totalDelay:0.04
-																delayDistribution:kMy_AnimationTimeDistributionLinear
+																fromFrame:oldFrame toFrame:newFrame
 																effect:kMy_AnimationEffectFadeIn];
 }// @autoreleasepool
 }// TransitionWindowSectionForSearchResult
@@ -691,6 +669,35 @@ createImageWindowFromWindowRect		(NSWindow*		inWindow,
 #pragma mark -
 @implementation CocoaAnimation_ImageWindow //{
 
+
+#pragma mark NSWindow
+
+
+/*!
+Overrides animation time so that custom image windows
+resize at the required rate.
+
+(2022.12)
+*/
+- (NSTimeInterval)
+animationResizeTime:(NSRect)	newFrame
+{
+	NSTimeInterval		result = 0;
+	
+	
+	if (0 == self.animationResizeTime)
+	{
+		result = [super animationResizeTime:newFrame];
+	}
+	else
+	{
+		result = self.animationResizeTime;
+	}
+	
+	return result;
+}// animationResizeTime:
+
+
 @end //}
 
 
@@ -718,20 +725,15 @@ imageWindow:(CocoaAnimation_ImageWindow*)			aBorderlessWindow
 finalWindow:(NSWindow*)								theActualWindow
 fromFrame:(NSRect)									sourceRect
 toFrame:(NSRect)									targetRect
-totalDelay:(NSTimeInterval)							aDuration
-delayDistribution:(My_AnimationTimeDistribution)	aDistribution
 effect:(My_AnimationEffect)							anEffect
 simplified:(BOOL)									isSimplified
 {
 	self = [super init];
 	if (nil != self)
 	{
-		BOOL				reduceFrameRate = (gAnimationsInProgress > 2/* arbitrary */)
-												? YES
-												: isSimplified;
-		NSTimeInterval		baseDuration = (reduceFrameRate)
-											? aDuration / 2.0
-											: aDuration;
+		BOOL	reduceFrameRate = (gAnimationsInProgress > 2/* arbitrary */)
+									? YES
+									: isSimplified;
 		
 		
 		// track animations globally as a crude way to estimate when too much
@@ -742,18 +744,9 @@ simplified:(BOOL)									isSimplified
 		_actualWindow = theActualWindow;
 		_originalFrame = sourceRect;
 		_targetFrame = targetRect;
-		_frameCount = (reduceFrameRate) ? 5 : 10;
-		if (baseDuration < 0.05/* arbitrary */)
-		{
-			// timers are not precise and over-delays are possible;
-			// arbitrarily cut frames if the total duration is
-			// intended to be quite fast (otherwise the animation
-			// could lag noticeably)
-			_frameCount -= ((reduceFrameRate) ? 2 : 6); // arbitrary reducation
-		}
+		_frameCount = (reduceFrameRate) ? 3 : 4;
 		_currentStep = 0;
 		_animationDone = NO;
-		_frameDelays = new NSTimeInterval[kCurveLength];
 		if ((kMy_AnimationEffectFadeIn == anEffect) ||
 			(kMy_AnimationEffectFadeOut == anEffect))
 		{
@@ -827,52 +820,6 @@ simplified:(BOOL)									isSimplified
 			break;
 		}
 		
-		// configure delays; for some delays an algorithm is applied to
-		// create a curve against a unit scale, so that the loop portion
-		// just multiplies the linear amount against the curve
-		// (TEMPORARY; for large delays the frame count probably should
-		// be increased to smooth out the animation over time, and right
-		// now the frame count is fairly inflexible)
-		{
-			size_t		i = 0;
-			
-			
-			if (kMy_AnimationTimeDistributionEaseOut == aDistribution)
-			{
-				// assign initial values assuming a unit curve only; be
-				// sure that the total number is equal to the frame count
-				// so that any user-specified total delay is not exceeded
-				float		scaleTotal = 0.0;
-				
-				
-				_frameDelays[i] = 0.8; scaleTotal += _frameDelays[i]; ++i;
-				_frameDelays[i] = 0.9; scaleTotal += _frameDelays[i]; ++i;
-				_frameDelays[i] = 0.9; scaleTotal += _frameDelays[i]; ++i;
-				_frameDelays[i] = 1.0; scaleTotal += _frameDelays[i]; ++i;
-				_frameDelays[i] = 1.0; scaleTotal += _frameDelays[i]; ++i;
-				_frameDelays[i] = 1.1; scaleTotal += _frameDelays[i]; ++i;
-				_frameDelays[i] = 1.1; scaleTotal += _frameDelays[i]; ++i;
-				_frameDelays[i] = 1.2; scaleTotal += _frameDelays[i]; ++i;
-				assert(kCurveLength == i);
-				for (i = 0; i < kCurveLength; ++i)
-				{
-					// scale the unit curve accordingly
-					_frameDelays[i] *= (baseDuration / scaleTotal);
-				}
-			}
-			else
-			{
-				float const		kPerUnitLinearDelay = STATIC_CAST(baseDuration, float) / kCurveLength;
-				
-				
-				for (i = 0; i < kCurveLength; ++i)
-				{
-					// linear
-					_frameDelays[i] = kPerUnitLinearDelay;
-				}
-			}
-		}
-		
 		// calculate the size of each unit of the animation
 		_frameUnitH = (_targetFrame.origin.x - _originalFrame.origin.x) / kCurveLength;
 		_frameUnitV = (_targetFrame.origin.y - _originalFrame.origin.y) / kCurveLength;
@@ -902,7 +849,7 @@ simplified:(BOOL)									isSimplified
 									});
 	}
 	return self;
-}// initWithTransition:imageWindow:finalWindow:fromFrame:toFrame:totalDelay:delayDistribution:effect:simplified:
+}// initWithTransition:imageWindow:finalWindow:fromFrame:toFrame:effect:simplified:
 
 
 /*!
@@ -917,18 +864,15 @@ imageWindow:(CocoaAnimation_ImageWindow*)			aBorderlessWindow
 finalWindow:(NSWindow*)								theActualWindow
 fromFrame:(NSRect)									sourceRect
 toFrame:(NSRect)									targetRect
-totalDelay:(NSTimeInterval)							aDuration
-delayDistribution:(My_AnimationTimeDistribution)	aDistribution
 effect:(My_AnimationEffect)							anEffect
 {
 	BOOL	isSimplified = ((NSWidth(theActualWindow.frame) * NSHeight(theActualWindow.frame)) > 80000/* arbitrary */);
 	
 	
 	return [self initWithTransition:aTransition imageWindow:aBorderlessWindow finalWindow:theActualWindow
-									fromFrame:sourceRect toFrame:targetRect totalDelay:aDuration
-									delayDistribution:aDistribution effect:anEffect
-									simplified:isSimplified];
-}// initWithTransition:imageWindow:finalWindow:fromFrame:toFrame:totalDelay:delayDistribution:effect:
+									fromFrame:sourceRect toFrame:targetRect
+									effect:anEffect simplified:isSimplified];
+}// initWithTransition:imageWindow:finalWindow:fromFrame:toFrame:effect:
 
 
 /*!
@@ -947,7 +891,6 @@ dealloc
 	}
 	
 	// if the animation is released too soon, force the correct window location
-	delete [] _frameDelays;
 	delete [] _frameOffsetsH;
 	delete [] _frameOffsetsV;
 	delete [] _frameAlphas;
@@ -969,7 +912,6 @@ init
 	assert(false && "invalid way to initialize derived class");
 	return [self initWithTransition:kMy_AnimationTransitionSlide imageWindow:nil
 									finalWindow:nil fromFrame:NSZeroRect toFrame:NSZeroRect
-									totalDelay:0 delayDistribution:kMy_AnimationTimeDistributionLinear
 									effect:kMy_AnimationEffectNone simplified:NO];
 }// init
 
@@ -1030,7 +972,8 @@ nextAnimationStep
 			newFrame.size.height = powerOfTwo;
 		}
 	}
-	[self.borderlessWindow setFrame:newFrame display:YES];
+	self.borderlessWindow.animationResizeTime = 0.04;
+	[self.borderlessWindow setFrame:newFrame display:YES animate:YES/* see "animationResizeTime:" */];
 	
 	// adjust alpha channel, if necessary
 	if (nullptr != self.frameAlphas)
@@ -1047,7 +990,7 @@ nextAnimationStep
 		decltype(self)	blockSelf = self;
 		
 		
-		CocoaExtensions_RunLater(self.frameDelays[self.currentStep],
+		CocoaExtensions_RunLater(self.borderlessWindow.animationResizeTime,
 									^{ [blockSelf nextAnimationStep]; });
 	}
 	else

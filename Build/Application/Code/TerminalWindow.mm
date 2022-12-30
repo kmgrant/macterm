@@ -3695,6 +3695,23 @@ performFind:(id)	sender
 
 
 /*!
+Helps the user to locate the terminal screen cursor by
+displaying an animation over the cursor location.
+
+(2022.12)
+*/
+- (IBAction)
+performFindCursor:(id)	sender
+{
+#pragma unused(sender)
+	TerminalViewRef		targetView = TerminalWindow_ReturnViewWithFocus(self.terminalWindowRef);
+	
+	
+	TerminalView_ZoomToCursor(targetView);
+}// performFindCursor:
+
+
+/*!
 Companion for "performShowCompletions:"; the "sender" is an NSMenuItem
 whose title should be interpreted as text to be sent as a completion
 (as if the user had typed it).
