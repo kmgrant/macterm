@@ -24,7 +24,15 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
-    '20220101',
+    '20230102',
+    '20221230',
+    '20221129',
+    '20221127',
+    '20221124',
+    '20221121',
+    '20220709',
+    '20220618',
+    '20220402',
     '20211227',
     '20211222',
     '20210220',
@@ -616,7 +624,36 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
-    '20220101': [
+    '20230102': [
+    ],
+    '20221230': [
+        'Fix “Find Cursor”.',
+        'Improve window animation effects.',
+    ],
+    '20221129': [
+        'Fix “Make Text as Big as Possible”.',
+    ],
+    '20221127': [
+        'Fix auto-opening of certain windows.',
+    ],
+    '20221124': [
+        'Fix issue where multiple Quit warnings could appear.',
+    ],
+    '20221121': [
+        'Alert messages once again use a wider, left-oriented style.',
+    ],
+    '20220709': [
+        '“Preferences” will now automatically become “Settings” on macOS 13.0+.',
+    ],
+    '20220618': [
+        'Fix focus-follows-mouse for read-only views.',
+        'Fix live resize for non-terminal windows.',
+    ],
+    '20220402': [
+        'Fix focus-follows-mouse when selecting menu items.',
+    ],
+    '20220402': [
+        'Resolve CVE-2022-24130, SIXEL overflow.',
     ],
     '20211227': [
         'Implemented "bracketed Paste mode", which is a terminal feature that allows the program running in the terminal to request extra escape sequences before and after text inserted by Paste (or equivalent user-initiated actions such as drag-and-drop).  Many modern versions of shells, text editors and other programs will support this mode.',
