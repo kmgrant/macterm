@@ -5,7 +5,7 @@
 	PreferencesSearch.plist
 	
 	MacTerm
-	© 1998-2022 by Kevin Grant
+	© 1998-2023 by Kevin Grant
 	
 	This file is used to implement the search field in the Preferences window.
 	As such, the keyword strings can be localized (an attempt is made to find a
