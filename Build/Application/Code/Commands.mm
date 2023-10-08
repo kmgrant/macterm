@@ -38,16 +38,15 @@
 #import <climits>
 #import <cstdio>
 #import <cstring>
+
+// standard-C++ includes
 #import <functional>
 #import <list>
 #import <sstream>
 #import <string>
 
 // Unix includes
-extern "C"
-{
-#	import <sys/socket.h>
-}
+#import <sys/socket.h>
 
 // Mac includes
 @import ApplicationServices;
@@ -195,8 +194,7 @@ Model of STL Binary Predicate.
 (4.1)
 */
 #pragma mark lessThanIfMainScreen
-struct lessThanIfMainScreen:
-public std::binary_function< NSScreen*/* argument 1 */, NSScreen*/* argument 2 */, bool/* return */ >
+struct lessThanIfMainScreen
 {
 	bool
 	operator()	(NSScreen*	inScreen1,

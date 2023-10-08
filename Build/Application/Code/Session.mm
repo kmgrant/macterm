@@ -318,8 +318,7 @@ Model of STL Unary Function.
 (1.0)
 */
 #pragma mark terminalDataWriter
-class terminalDataWriter:
-public std::unary_function< TerminalScreenRef/* argument */, void/* return */ >
+class terminalDataWriter
 {
 public:
 	terminalDataWriter	(UInt8 const*	inBuffer,
@@ -353,8 +352,7 @@ Model of STL Unary Function.
 (1.0)
 */
 #pragma mark terminalDumbDataWriter
-class terminalDumbDataWriter:
-public std::unary_function< TerminalScreenRef/* argument */, void/* return */ >
+class terminalDumbDataWriter
 {
 public:
 	terminalDumbDataWriter	(UInt8 const*	inBuffer,
@@ -411,8 +409,7 @@ Model of STL Unary Function.
 (1.0)
 */
 #pragma mark vectorGraphicsDataWriter
-class vectorGraphicsDataWriter:
-public std::unary_function< SInt16/* argument */, void/* return */ >
+class vectorGraphicsDataWriter
 {
 public:
 	vectorGraphicsDataWriter	(UInt8 const*	inBuffer,

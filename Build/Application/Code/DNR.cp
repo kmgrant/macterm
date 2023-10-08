@@ -34,12 +34,9 @@
 #include <UniversalDefines.h>
 
 // Unix includes
-extern "C"
-{
-#	include <netdb.h>
-#	include <sys/socket.h>
-#	include <sys/types.h>
-}
+#include <netdb.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 
 // Mac includes
 #include <CoreServices/CoreServices.h>

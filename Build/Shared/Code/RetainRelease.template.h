@@ -125,10 +125,10 @@ public:
 	operator = (RetainRelease const&);
 	
 	virtual inline bool
-	operator == (RetainRelease const&);
+	operator == (RetainRelease const&) const;
 	
 	virtual inline bool
-	operator != (RetainRelease const&);
+	operator != (RetainRelease const&) const;
 	
 	inline void
 	clear ();
@@ -275,6 +275,7 @@ template < typename reference_mgr_type >
 bool
 RetainRelease< reference_mgr_type >::
 operator ==		(RetainRelease const&	inOther)
+const
 {
 	return (returnRef() == inOther.returnRef());
 }// operator ==
@@ -289,6 +290,7 @@ template < typename reference_mgr_type >
 bool
 RetainRelease< reference_mgr_type >::
 operator !=		(RetainRelease const&	inOther)
+const
 {
 	return ! operator == (inOther);
 }// operator !=

@@ -47,11 +47,8 @@
 #import <vector>
 
 // UNIX includes
-extern "C"
-{
-#	include <pthread.h>
-#	include <strings.h>
-}
+#include <pthread.h>
+#include <strings.h>
 
 // Mac includes
 #import <Carbon/Carbon.h> // for old APIs (TEMPORARY; deprecated)

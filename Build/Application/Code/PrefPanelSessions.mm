@@ -38,10 +38,7 @@
 #import <map>
 
 // Unix includes
-extern "C"
-{
-#	include <netdb.h>
-}
+#import <netdb.h>
 #import <strings.h>
 
 // Mac includes

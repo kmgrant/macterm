@@ -38,12 +38,9 @@
 @import Cocoa;
 
 // Unix includes
-extern "C"
-{
-#	include <netdb.h>
-#	include <arpa/inet.h>
-#	include <netinet/in.h>
-}
+#include <netdb.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
 
 // library includes
 #import <BoundName.objc++.h>

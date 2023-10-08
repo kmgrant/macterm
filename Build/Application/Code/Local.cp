@@ -50,25 +50,25 @@
 extern "C"
 {
 #	include <errno.h>
-#	include <fcntl.h>
-#	include <grp.h>
-#	include <netdb.h>
-#	include <pthread.h>
-#	include <pwd.h>
-#	include <signal.h>
-#	include <sysexits.h>
-#	include <termios.h>
-#	include <unistd.h>
-#	include <netinet/in.h>
-#	include <sys/ioctl.h>
-#	include <sys/socket.h>
-#	include <sys/stat.h>
-#	include <sys/termios.h>
-#	include <sys/ttydefaults.h>
-#	include <sys/types.h>
-#	include <sys/wait.h>
-#	include <util.h>
 }
+#include <fcntl.h>
+#include <grp.h>
+#include <netdb.h>
+#include <pthread.h>
+#include <pwd.h>
+#include <signal.h>
+#include <sysexits.h>
+#include <termios.h>
+#include <unistd.h>
+#include <netinet/in.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/termios.h>
+#include <sys/ttydefaults.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <util.h>
 
 // Mac includes (TEMPORARY)
 #include <Carbon/Carbon.h> // DEPRECATED; need to reimplement timers below

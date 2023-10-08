@@ -152,10 +152,10 @@ public:
 	operator = (CFRetainRelease const&);
 	
 	virtual inline bool
-	operator == (CFRetainRelease const&);
+	operator == (CFRetainRelease const&) const;
 	
 	virtual inline bool
-	operator != (CFRetainRelease const&);
+	operator != (CFRetainRelease const&) const;
 	
 	inline void
 	clear ();
@@ -713,6 +713,7 @@ sensibly in something like an STL container.
 bool
 CFRetainRelease::
 operator ==	(CFRetainRelease const&		inOther)
+const
 {
 	return CFEqual(returnCFTypeRef(), inOther.returnCFTypeRef());
 }// operator ==
@@ -726,6 +727,7 @@ The inverse of operator ==().
 bool
 CFRetainRelease::
 operator !=	(CFRetainRelease const&		inOther)
+const
 {
 	return ! operator == (inOther);
 }// operator !=

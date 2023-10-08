@@ -40,10 +40,7 @@
 #include <map>
 
 // UNIX includes
-extern "C"
-{
-#	include <sys/types.h>
-}
+#include <sys/types.h>
 
 // Mac includes
 #include <CoreFoundation/CoreFoundation.h>

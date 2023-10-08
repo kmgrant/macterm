@@ -166,8 +166,7 @@ Model of STL Predicate.
 (1.0)
 */
 #pragma mark booleanListenerInvoker
-class booleanListenerInvoker:
-public std::unary_function< My_EventToListenerListPtrMap::value_type/* argument */, bool/* return */ >
+class booleanListenerInvoker
 {
 public:
 	booleanListenerInvoker		(ListenerModel_Ref		inForWhichModel,
@@ -223,8 +222,7 @@ Model of STL Unary Function.
 (1.0)
 */
 #pragma mark standardListenerInvoker
-class standardListenerInvoker:
-public std::unary_function< My_EventToListenerListPtrMap::value_type/* argument */, void/* return */ >
+class standardListenerInvoker
 {
 public:
 	standardListenerInvoker		(ListenerModel_Ref		inForWhichModel,

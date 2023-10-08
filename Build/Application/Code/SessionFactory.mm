@@ -185,8 +185,7 @@ Model of STL Unary Function.
 (3.1)
 */
 #pragma mark workspaceContainsWindow
-class workspaceContainsWindow:
-public std::unary_function< Workspace_Ref/* argument */, bool/* return */ >
+class workspaceContainsWindow
 {
 public:
 	workspaceContainsWindow	(TerminalWindowRef		inWindow)

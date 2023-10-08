@@ -55,8 +55,8 @@
 extern "C"
 {
 #	include <errno.h>
-#	include <pthread.h>
 }
+#include <pthread.h>
 
 // Mac includes
 @import ApplicationServices;
@@ -683,6 +683,7 @@ public:
 	
 	bool
 	operator ==		(My_CellBoundary const&		inOther)
+	const
 	{
 		return ((inOther.startCell == this->startCell) &&
 				(inOther.cellCount == this->cellCount));
@@ -707,6 +708,7 @@ public:
 	
 	bool
 	operator ==		(My_RowBoundary const&		inOther)
+	const
 	{
 		return ((inOther.firstRow == this->firstRow) &&
 				(inOther.lastRow == this->lastRow));
@@ -9460,8 +9462,14 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 						CGColorSpaceRef		colorSpace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
 						
 						
+						// note: casting kCGBitmapByteOrderDefault and kCGImageAlphaNoneSkipLast to
+						// the same base integer type to suppress compiler warning about combining
+						// different enum types with "|" (the API requires it so this has to be
+						// suppressed)
 						drawingContext = CGBitmapContextCreate(nullptr/* data or nullptr to auto-allocate */, totalPixelsH, totalPixelsV, kBitsPerSample, kBytesPerRow,
-																colorSpace, (kCGBitmapByteOrderDefault | kCGImageAlphaNoneSkipLast));
+																colorSpace,
+																(STATIC_CAST(kCGBitmapByteOrderDefault, uint32_t) |
+																	STATIC_CAST(kCGImageAlphaNoneSkipLast, uint32_t)));
 						assert(nullptr != drawingContext);
 						//NSLog(@"Sixel bitmap %lf x %lf, context@%p, colorspace@%p", (double)totalPixelsH, (double)totalPixelsV, drawingContext, colorSpace); // debug
 						CGColorSpaceRelease(colorSpace); colorSpace = nullptr;

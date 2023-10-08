@@ -124,8 +124,7 @@ Model of STL Binary Predicate.
 (1.0)
 */
 #pragma mark isCFStringPairEqual
-class isCFStringPairEqual:
-public std::binary_function< CFStringRef/* argument 1 */, CFStringRef/* argument 2 */, bool/* return */ >
+class isCFStringPairEqual
 {
 public:
 	bool
@@ -150,8 +149,7 @@ Model of STL Unary Function.
 (1.0)
 */
 #pragma mark returnCFStringHashCode
-class returnCFStringHashCode:
-public std::unary_function< CFStringRef/* argument */, size_t/* return */ >
+class returnCFStringHashCode
 {
 public:
 	size_t
@@ -798,8 +796,7 @@ Model of STL Predicate.
 
 (3.1)
 */
-class contextNameEqualTo:
-public std::unary_function< My_ContextInterfacePtr/* argument */, bool/* return */ >
+class contextNameEqualTo
 {
 public:
 	contextNameEqualTo	(CFStringRef	inName)
