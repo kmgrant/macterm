@@ -10238,6 +10238,7 @@ initWithFrame:(NSRect)		aFrame
 											//BRIDGE_CAST(kUTTypeFolder, NSString*), // also a directory
 										]];
 		
+		self.clipsToBounds = YES; // building against Sonoma SDK or later, default value changed so be explicit (see also "drawRect:")
 		self.refusesFirstResponder = NO;
 		self.wantsLayer = YES;
 		
